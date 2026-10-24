@@ -435,6 +435,8 @@ html{-webkit-text-size-adjust:100%}
 .etapa:last-child{border-bottom:0}.etapa .req-c{width:14px;height:14px}
 .ftcard{display:flex;flex-direction:column;gap:8px}
 .view > .actions .btn{flex:0 1 auto}
+.r-ext [data-v="emails"]{display:none!important}
+.em-corpo{white-space:pre-wrap;font-size:14px;line-height:1.45;border-left:3px solid var(--line);padding-left:10px;margin:0;overflow-wrap:anywhere}
 
 </style>
 </head><body>
@@ -454,6 +456,9 @@ html{-webkit-text-size-adjust:100%}
     </div>
     <nav class="tabs" aria-label="Seções">
       <button class="tab" data-act="view" data-v="acessos">Acessos</button>
+      <button class="tab" data-act="view" data-v="reunioes">Reuniões</button>
+      <button class="tab" data-act="view" data-v="emails">E-mails</button>
+      <span class="tab-sep" aria-hidden="true"></span>
       <button class="tab" data-act="view" data-v="projetos">Projetos</button>
       <button class="tab" data-act="view" data-v="pex">PEX</button>
       <button class="tab" data-act="view" data-v="si">SI / SIAE</button>
@@ -470,8 +475,8 @@ html{-webkit-text-size-adjust:100%}
 
 <nav class="bnav" aria-label="Seções">
   <button data-act="view" data-v="acessos"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2.5" y="6" width="8" height="12" rx="1.5"/><rect x="13.5" y="6" width="8" height="12" rx="1.5"/><path d="M10.5 12h3"/></svg>Acessos</button>
-  <button data-act="view" data-v="projetos"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg>Projetos</button>
-  <button data-act="view" data-v="pex"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="17" rx="1.5"/><path d="M8 2v4M16 2v4M8 11h8M8 15h5"/></svg>PEX</button>
+  <button data-act="view" data-v="reunioes"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M10.5 19a5.5 5.5 0 0 1 11 0"/></svg>Reuniões</button>
+  <button data-act="view" data-v="emails"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/></svg>E-mails</button>
   <button data-act="view" data-v="si"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M12 3v9l5 3"/><circle cx="12" cy="12" r="9"/></svg>SI</button>
   <button data-act="mais" data-v="mais" id="bMais"><svg width="22" height="22" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>Mais</button>
   <button data-act="admin" data-v="admin" id="bAdmin" hidden><svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 20V9m8 11V4m8 16v-8"/><path d="M2 9h4M10 8h4M18 12h4"/></svg>Cadastros</button>
@@ -577,7 +582,7 @@ const tagOf=(ac,lk)=>(ac&&ac.tags&&ac.tags[tk(lk)])||'';
 
 /* ================= catálogo do SIGA ================= */
 const ROLES = {admin:'Administrador',interno:'Interno',externo:'Externo'};
-const VIEWS = ['acessos','projetos','pex','si','spcs','superv','semaforo','painel'];
+const VIEWS = ['acessos','reunioes','emails','projetos','pex','si','spcs','superv','semaforo','painel'];
 const VIEW_N = {acessos:'Acessos',projetos:'Projetos',pex:'PEX',si:'SI / SIAE',spcs:'SPCS',superv:'Supervisão',semaforo:'Semáforo',painel:'Painel'};
 /* situação de documentos de projeto e PEX (combinadas com o Ricardo) */
 const DST = {aguardando:'Aguardando envio',enviado:'Revisão enviada',analise:'Em análise',aprovado:'Aprovado',aprovado_com:'Aprovado com comentários',reprovado:'Reprovado / devolvido',executada:'Executada',cancelado:'Cancelado / substituído'};
@@ -682,12 +687,12 @@ function plLerTexto(txt){
 /* ================= telas, cabeçalho, folhas laterais ================= */
 function setView(v){S.view=v;try{localStorage.setItem('siga.view',v)}catch(e){};renderView();window.scrollTo(0,0)}
 function renderNav(){document.querySelectorAll('[data-act="view"]').forEach(b=>{if(b.dataset.v===S.view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
-  const bm=$('#bMais');if(bm){const fora=!['acessos','projetos','pex','si'].includes(S.view);if(fora)bm.setAttribute('aria-current','page');else bm.removeAttribute('aria-current')}}
+  const bm=$('#bMais');if(bm){const fora=!['acessos','reunioes','emails','si'].includes(S.view);if(fora)bm.setAttribute('aria-current','page');else bm.removeAttribute('aria-current')}}
 function renderHeader(){
   const sel=$('#acSel');
   sel.innerHTML=`<option value="">Todos os acessos</option>`+S.acessos.map(a=>`<option value="${esc(a.id)}">${esc(acNome(a))}</option>`).join('');
   const um=!R.owner()&&S.acessos.length===1;sel.value=acById(S.acId)?S.acId:(um?S.acessos[0].id:'');sel.hidden=!S.me||!S.acessos.length||um;
-  const r=R.role(),rc=$('#roleChip');rc.hidden=!r;if(r){rc.className='role r-'+r;rc.innerHTML=r==='admin'?'Admin<span class="full">istrador</span>':ROLES[r]}
+  const r=R.role(),rc=$('#roleChip');document.body.classList.toggle('r-ext',r==='externo');rc.hidden=!r;if(r){rc.className='role r-'+r;rc.innerHTML=r==='admin'?'Admin<span class="full">istrador</span>':ROLES[r]}
   const ab=$('#adminBtn');ab.hidden=!R.owner();ab.querySelector('.dot')?.remove();
   const nc=R.owner()?S.emails.filter(e=>!e.ac).length:0;if(nc)ab.insertAdjacentHTML('beforeend',`<span class="dot">${nc}</span>`);
 }
@@ -1444,7 +1449,7 @@ function semCfg(){S.semDraft=JSON.parse(JSON.stringify(semEtapas()));pushSheet({
     <div class="sec-row"><label class="chk"><input type="checkbox" data-sd="${i}" data-f="on"${e.on!==false?' checked':''}> <span>Ligada</span></label><span class="actions" style="flex-wrap:nowrap"><button class="btn sm" data-act="sd-mv" data-i="${i}" data-d="-1"${i?'':' disabled'} aria-label="Subir">↑</button><button class="btn sm" data-act="sd-mv" data-i="${i}" data-d="1"${i<L.length-1?'':' disabled'} aria-label="Descer">↓</button><button class="btn sm danger" data-act="sd-rm" data-i="${i}" aria-label="Excluir etapa">✕</button></span></div></div>`).join('')}
   <div class="actions"><button class="btn" data-act="sd-add">Incluir etapa</button><button class="btn" data-act="sd-pad">Voltar ao padrão</button></div>
   <div class="actions"><button class="btn primary" data-act="sd-save">Salvar etapas</button></div>`}})}
-function maisSheet(){pushSheet({title:'Mais',render:()=>`<div class="mais-g">${[['spcs','SPCS'],['superv','Supervisão'],['semaforo','Semáforo'],['painel','Painel']].map(([v,t])=>`<button class="btn" data-act="mais-go" data-v="${v}">${t}</button>`).join('')}${R.owner()?`<button class="btn" data-act="admin">Cadastros</button>`:''}</div>`})}
+function maisSheet(){pushSheet({title:'Mais',render:()=>`<div class="mais-g">${[['projetos','Projetos'],['pex','PEX'],['spcs','SPCS'],['superv','Supervisão'],['semaforo','Semáforo'],['painel','Painel']].map(([v,t])=>`<button class="btn" data-act="mais-go" data-v="${v}">${t}</button>`).join('')}${R.owner()?`<button class="btn" data-act="admin">Cadastros</button>`:''}</div>`})}
 Object.assign(ACT,{
   'sem-cfg':()=>semCfg(),mais:()=>maisSheet(),'mais-go':b=>{closeSheet();setView(b.dataset.v)},
   'sd-mv':b=>{const i=+b.dataset.i,j=i+(+b.dataset.d),L=S.semDraft;[L[i],L[j]]=[L[j],L[i]];refreshLiveSheet()},
@@ -1459,6 +1464,350 @@ document.addEventListener('change',e=>{const t=e.target;if(!t)return;
   if(t.dataset&&t.dataset.sd!=null){const it=S.semDraft[+t.dataset.sd];if(!it)return;it[t.dataset.f]=t.type==='checkbox'?t.checked:t.value}
   else if(t.id==='pnConc'){S.fpn=t.checked;renderView()}});
 document.addEventListener('input',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.sd!=null&&t.dataset.f==='nome'){const it=S.semDraft[+t.dataset.sd];if(it)it.nome=t.value}});
+
+/* PDF mínimo, sem dependências: fontes padrão (Helvetica e Symbol), tabelas com quebra de página, imagem JPEG.
+   Funciona offline. */
+const PDFK=(function(){
+const MET={"Helvetica": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 350, 556, 350, 222, 556, 333, 1000, 556, 556, 333, 1000, 667, 333, 1000, 350, 611, 350, 350, 222, 222, 333, 333, 350, 556, 1000, 333, 1000, 500, 333, 944, 350, 500, 667, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 556, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 584, 611, 556, 556, 556, 556, 500, 556, 500], "Helvetica-Bold": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 350, 556, 350, 278, 556, 500, 1000, 556, 556, 333, 1000, 667, 333, 1000, 350, 611, 350, 350, 278, 278, 500, 500, 350, 556, 1000, 333, 1000, 556, 333, 944, 350, 500, 667, 278, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 611, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 584, 611, 611, 611, 611, 611, 556, 611, 556], "Helvetica-Oblique": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 350, 556, 350, 222, 556, 333, 1000, 556, 556, 333, 1000, 667, 333, 1000, 350, 611, 350, 350, 222, 222, 333, 333, 350, 556, 1000, 333, 1000, 500, 333, 944, 350, 500, 667, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 556, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 584, 611, 556, 556, 556, 556, 500, 556, 500], "Symbol": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 250, 333, 713, 500, 549, 833, 778, 439, 333, 333, 500, 549, 250, 549, 250, 278, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 278, 278, 549, 549, 549, 444, 549, 722, 667, 722, 612, 611, 763, 603, 722, 333, 631, 722, 686, 889, 722, 722, 768, 741, 556, 592, 611, 690, 439, 768, 645, 795, 611, 333, 863, 333, 658, 500, 500, 631, 549, 549, 494, 439, 521, 411, 603, 329, 603, 549, 549, 576, 521, 549, 549, 521, 549, 603, 439, 576, 713, 686, 493, 686, 494, 480, 200, 480, 549, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 750, 620, 247, 549, 167, 713, 500, 753, 753, 753, 753, 1042, 987, 603, 987, 603, 400, 549, 411, 549, 549, 713, 494, 460, 549, 549, 549, 549, 1000, 603, 1000, 658, 823, 686, 795, 987, 768, 768, 823, 768, 768, 713, 713, 713, 713, 713, 713, 713, 768, 713, 790, 790, 890, 823, 549, 250, 713, 603, 603, 1042, 987, 603, 987, 603, 494, 329, 790, 790, 786, 713, 384, 384, 384, 384, 384, 384, 494, 494, 494, 494, 0, 329, 274, 686, 686, 686, 384, 384, 384, 384, 384, 384, 494, 494, 494, 0]};
+const FN={R:'Helvetica',B:'Helvetica-Bold',I:'Helvetica-Oblique',S:'Symbol'};
+const CP={0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F};
+const SYM={0x00B5:0x6D,0x03BC:0x6D,0x03A9:0x57,0x2126:0x57,0x2264:0xA3,0x2265:0xB3,0x221A:0xD6,0x2194:0xAB,0x2212:0x2D,0x03C0:0x70,0x03B4:0x64,0x0394:0x44,0x2192:0xAE,0x2190:0xAC,0x03C6:0x66,0x03A6:0x46,0x2248:0xBB,0x221E:0xA5};
+function runs(str,fk){ const out=[]; let cur=null;
+  for(const ch of String(str)){ const cp=ch.codePointAt(0); let f=fk,b;
+    if(SYM[cp]!=null){ f='S'; b=SYM[cp]; } else if(cp<0x80||(cp>=0xA0&&cp<=0xFF)) b=cp; else if(CP[cp]!=null) b=CP[cp]; else if(cp===0x2009||cp===0x202F||cp===0x00A0) b=0x20; else b=0x3F;
+    if(!cur||cur.f!==f){ cur={f,b:[]}; out.push(cur); } cur.b.push(b); }
+  return out; }
+function wRun(r,size){ const m=MET[FN[r.f]]; let w=0; for(const b of r.b) w+=(m[b]||556); return w*size/1000; }
+function width(str,size,fk){ return runs(str,fk||'R').reduce((a,r)=>a+wRun(r,size),0); }
+function hex(b){ return '<'+b.map(x=>x.toString(16).padStart(2,'0')).join('')+'>'; }
+function rgb(c){ c=(c||'#000').replace('#',''); if(c.length===3) c=c.split('').map(x=>x+x).join(''); return [0,2,4].map(i=>(parseInt(c.substr(i,2),16)/255).toFixed(3)).join(' '); }
+function wrap(str,size,fk,maxW){ const lines=[]; String(str??'').split('\n').forEach(par=>{ const words=par.split(/ +/); let line='';
+    for(let w of words){ const t=line?line+' '+w:w; if(width(t,size,fk)<=maxW||!line){ if(!line&&width(w,size,fk)>maxW){ let part=''; for(const ch of w){ if(width(part+ch,size,fk)>maxW&&part){ lines.push(part); part=ch; } else part+=ch; } line=part; } else line=t; } else { lines.push(line); line=w; if(width(w,size,fk)>maxW){ let part=''; for(const ch of w){ if(width(part+ch,size,fk)>maxW&&part){ lines.push(part); part=ch; } else part+=ch; } line=part; } } }
+    lines.push(line); }); return lines; }
+function jpegInfo(u8){ let i=2; while(i<u8.length){ if(u8[i]!==0xFF){ i++; continue; } const mk=u8[i+1], len=(u8[i+2]<<8)|u8[i+3]; if(mk>=0xC0&&mk<=0xC3){ return {h:(u8[i+5]<<8)|u8[i+6], w:(u8[i+7]<<8)|u8[i+8], c:u8[i+9]}; } i+=2+len; } return null; }
+function b64ToU8(dataUrl){ const s=atob(dataUrl.split(',')[1]); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u; }
+
+class Doc{
+  constructor(o){ o=o||{}; this.W=595.28; this.H=841.89; this.m=Object.assign({l:36,r:36,t:72,b:46},o.margin||{}); this.pages=[]; this.imgs=[]; this.cur=null; this.y=0; this.onPage=o.onPage||null; this.decor=o.decor||null; this.newPage(); }
+  get cw(){ return this.W-this.m.l-this.m.r; }
+  newPage(){ this.cur={ops:[]}; this.pages.push(this.cur); this.y=this.m.t; if(this.onPage) this.onPage(this,this.pages.length); }
+  ensure(h){ if(this.y+h>this.H-this.m.b){ this.newPage(); return true; } return false; }
+  op(s){ this.cur.ops.push(s); }
+  text(x,y,str,o){ o=o||{}; const size=o.size||9, fk=o.font||'R'; let tx=x; const w=width(str,size,fk);
+    if(o.align==='center'&&o.width) tx=x+(o.width-w)/2; else if(o.align==='right'&&o.width) tx=x+o.width-w;
+    const base=this.H-(y+size*0.8); let ops=`BT ${rgb(o.color)} rg `; let cx=tx;
+    for(const r of runs(str,fk)){ ops+=`/${r.f} ${size} Tf 1 0 0 1 ${cx.toFixed(2)} ${base.toFixed(2)} Tm ${hex(r.b)} Tj `; cx+=wRun(r,size); }
+    this.op(ops+'ET'); return w; }
+  rect(x,y,w,h,o){ o=o||{}; let s=''; if(o.fill) s+=`${rgb(o.fill)} rg `; if(o.stroke) s+=`${rgb(o.stroke)} RG ${(o.lw||0.5)} w `;
+    s+=`${x.toFixed(2)} ${(this.H-y-h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re ${o.fill&&o.stroke?'B':o.fill?'f':'S'}`; this.op(s); }
+  line(x1,y1,x2,y2,o){ o=o||{}; this.op(`${rgb(o.color||'#999')} RG ${o.lw||0.5} w ${x1.toFixed(2)} ${(this.H-y1).toFixed(2)} m ${x2.toFixed(2)} ${(this.H-y2).toFixed(2)} l S`); }
+  image(dataUrl,x,y,w,h){ let im=this.imgs.find(i=>i.src===dataUrl); if(!im){ const u=b64ToU8(dataUrl), inf=jpegInfo(u); im={src:dataUrl,data:u,w:inf.w,h:inf.h,c:inf.c,name:'Im'+(this.imgs.length+1)}; this.imgs.push(im); }
+    if(h==null) h=w*im.h/im.w; this.op(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${(this.H-y-h).toFixed(2)} cm /${im.name} Do Q`); return h; }
+  para(str,o){ o=o||{}; const size=o.size||9, fk=o.font||'R', lh=size*(o.lh||1.3), w=o.width||this.cw, x=o.x??this.m.l;
+    const lines=wrap(str,size,fk,w); for(const ln of lines){ this.ensure(lh); this.text(x,this.y,ln,{size,font:fk,color:o.color,align:o.align,width:w}); this.y+=lh; } return lines.length; }
+  /* table: cols:[{w,align}], head:[cell], rows:[[cell]], o:{size,headFill,headColor,line,pad} ; cell: string | {text,font,color,fill,align,span} */
+  table(cols,head,rows,o){ o=Object.assign({size:7.5,hsize:7,pad:2.5,line:'#B9C4AE',headFill:'#5A7E2E',headColor:'#FFFFFF',x:this.m.l,width:this.cw},o||{});
+    const tot=cols.reduce((a,c)=>a+(c.w||1),0); const ws=cols.map(c=>(c.w||1)/tot*o.width);
+    const norm=c=> (c==null||typeof c!=='object')?{text:c==null?'':String(c)}:c;
+    const layoutRow=(row,isHead)=>{ const cells=[]; let ci=0; for(const raw of row){ if(ci>=cols.length) break; const c=norm(raw); const span=Math.min(c.span||1,cols.length-ci); const w=ws.slice(ci,ci+span).reduce((a,b)=>a+b,0);
+        const size=c.size||(isHead?o.hsize:o.size), fk=c.font||(isHead?'B':'R'); const lines=wrap(c.text,size,fk,w-o.pad*2); const lab=c.label?wrap(c.label,o.lsize||6,'B',w-o.pad*2):[];
+        cells.push({c,ci,span,w,size,fk,lines,lab,x:o.x+ws.slice(0,ci).reduce((a,b)=>a+b,0)}); ci+=span; }
+      const h=Math.max(...cells.map(k=>k.lab.length*(o.lsize||6)*1.25+k.lines.length*k.size*1.22))+o.pad*2; return {cells,h}; };
+    const drawRow=(R,isHead)=>{ for(const k of R.cells){ const fill=k.c.fill||(isHead?o.headFill:null); if(fill) this.rect(k.x,this.y,k.w,R.h,{fill});
+        this.rect(k.x,this.y,k.w,R.h,{stroke:o.line,lw:0.5});
+        const ls=o.lsize||6; let ty=k.lab.length? this.y+o.pad : this.y+o.pad+(R.h-o.pad*2-k.lines.length*k.size*1.22)/2; const al=k.c.align||(isHead?'center':(cols[k.ci].align||'left'));
+        for(const ln of k.lab){ this.text(k.x+o.pad,ty,ln,{size:ls,font:'B',color:o.lcolor||'#5B6457',align:al,width:k.w-o.pad*2}); ty+=ls*1.25; }
+        for(const ln of k.lines){ this.text(k.x+o.pad,ty,ln,{size:k.size,font:k.fk,color:k.c.color||(isHead?o.headColor:'#111111'),align:al,width:k.w-o.pad*2}); ty+=k.size*1.22; } }
+      this.y+=R.h; };
+    const H=head?layoutRow(head,true):null;
+    if(H){ this.ensure(H.h+(rows.length?layoutRow(rows[0],false).h:0)); drawRow(H,true); }
+    for(const row of rows){ const R=layoutRow(row,false); if(this.ensure(R.h)&&H) drawRow(H,true); drawRow(R,false); }
+  }
+  output(){
+    if(this.decor) this.pages.forEach((p,i)=>{ this.cur=p; this.decor(this,i+1,this.pages.length); });
+    const enc=s=>{ const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i)&255; return u; };
+    const chunks=[]; let len=0; const offs=[]; const push=x=>{ const u=typeof x==='string'?enc(x):x; chunks.push(u); len+=u.length; };
+    const objs=[]; const add=body=>{ objs.push(body); return objs.length; };
+    // reserve: 1 catalog, 2 pages
+    objs.push(null,null);
+    const fontIds={}; ['R','B','I','S'].forEach(k=>{ fontIds[k]=add(`<< /Type /Font /Subtype /Type1 /BaseFont /${FN[k]}${k==='S'?'':' /Encoding /WinAnsiEncoding'} >>`); });
+    const imgIds={}; this.imgs.forEach(im=>{ imgIds[im.name]=add({stream:im.data,dict:`/Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /${im.c===1?'DeviceGray':im.c===4?'DeviceCMYK':'DeviceRGB'} /BitsPerComponent 8 /Filter /DCTDecode`}); });
+    const res=`<< /Font << ${Object.entries(fontIds).map(([k,v])=>`/${k} ${v} 0 R`).join(' ')} >> /XObject << ${Object.entries(imgIds).map(([k,v])=>`/${k} ${v} 0 R`).join(' ')} >> >>`;
+    const kids=[]; this.pages.forEach(p=>{ const content=p.ops.join('\n'); const cid=add({stream:enc(content),dict:''}); const pid=add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${this.W} ${this.H}] /Resources ${res} /Contents ${cid} 0 R >>`); kids.push(pid); });
+    objs[0]='<< /Type /Catalog /Pages 2 0 R >>'; objs[1]=`<< /Type /Pages /Kids [${kids.map(k=>k+' 0 R').join(' ')}] /Count ${kids.length} >>`;
+    const info=add(`<< /Producer (Pendencias SE) /Title ${hex(runs(this.title||'Relatorio','R').flatMap(r=>r.b))} >>`);
+    push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+    objs.forEach((o,i)=>{ offs[i]=len; push(`${i+1} 0 obj\n`); if(typeof o==='string') push(o+'\n'); else { push(`<< ${o.dict} /Length ${o.stream.length} >>\nstream\n`); push(o.stream); push('\nendstream\n'); } push('endobj\n'); });
+    const xref=len; push(`xref\n0 ${objs.length+1}\n0000000000 65535 f \n`+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join(''));
+    push(`trailer\n<< /Size ${objs.length+1} /Root 1 0 R /Info ${info} 0 R >>\nstartxref\n${xref}\n%%EOF`);
+    const out=new Uint8Array(len); let p=0; for(const c of chunks){ out.set(c,p); p+=c.length; } return out;
+  }
+}
+return {Doc,width,wrap};
+})();
+
+const PDF_LOGO="data:image/jpeg;base64,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";
+const PC={verde:'#5C892F',verdeClaro:'#EEF4E6',laranja:'#F1A001',cinza:'#5B6457',linha:'#B9C4AE',ok:'#1F7A4D',bad:'#B4372C',pend:'#9A6408',ink:'#111111'};
+
+/* ================= PDF com a identidade Neoenergia (helpers do SGC rev. 8 sobre o pdfmini) ================= */
+function pdfDoc(titulo,sub){
+  const gerado=new Date().toLocaleString('pt-BR');
+  const D=new PDFK.Doc({margin:{l:36,r:36,t:84,b:46},decor:(D,p,n)=>{const R=D.W-36;
+    D.image(PDF_LOGO,36,18,74);D.text(122,22,titulo.toUpperCase(),{size:11,font:'B',color:PC.verde});D.text(122,38,sub,{size:8.5,color:PC.cinza});
+    D.text(R-90,22,`Folha ${p} de ${n}`,{size:8,font:'B',align:'right',width:90});D.line(36,64,R,64,{color:PC.laranja,lw:2});
+    D.line(36,D.H-36,R,D.H-36,{color:PC.linha,lw:.5});D.text(36,D.H-31,`Gerado no SIGA em ${gerado}`,{size:6.8,color:PC.cinza})}});
+  D.title=titulo+' - '+sub;return D;
+}
+function pdfSec(D,t,min){D.ensure(min||40);D.y+=4;D.rect(D.m.l,D.y,D.cw,15,{fill:PC.verdeClaro});D.line(D.m.l,D.y+15,D.m.l+D.cw,D.y+15,{color:PC.verde,lw:1.1});D.text(D.m.l+4,D.y+3.5,t.toUpperCase(),{size:8.5,font:'B',color:PC.verde});D.y+=20}
+function pdfPares(D,pares,n){n=n||3;const rows=[];for(let i=0;i<pares.length;i+=n){const r=[];for(let j=0;j<n;j++){const p=pares[i+j];r.push(p?{label:p[0],text:p[1]==null||p[1]===''?'—':String(p[1]),size:8.5}:{text:''})}rows.push(r)}D.table(Array(n).fill({w:1}),null,rows,{pad:3});D.y+=6}
+function pdfTexto(D,t){if(t){D.para(t,{size:9,lh:1.35});D.y+=4}}
+const pdfBlob=D=>new Blob([D.output()],{type:'application/pdf'});
+
+/* ================= Reuniões: controle, transcrição do Teams, ata em PDF e ações ================= */
+const RST={rascunho:'Rascunho',emitida:'Ata emitida'};
+const AST={aberta:'Em aberto',concluida:'Concluída',cancelada:'Cancelada'};
+S.frn={aba:'reunioes',st:'',q:''};S.rd=null;
+const reunioes=()=>(S.reun||[]).filter(r=>acById(r.ac));
+const reunDoAc=ac=>reunioes().filter(r=>!ac||r.ac===ac.id);
+/* ---- leitura da transcrição (.vtt, .docx ou .txt exportados do Teams) ---- */
+const hms2s=t=>{const p=String(t).split(':').map(x=>parseFloat(String(x).replace(',','.'))||0);return p.length===3?p[0]*3600+p[1]*60+p[2]:p.length===2?p[0]*60+p[1]:p[0]};
+function lerTranscricao(txt){
+  txt=String(txt||'').replace(/\r\n?/g,'\n').replace(/^﻿/,'');const falas=[];
+  if(/-->/.test(txt)){ /* WebVTT */
+    const bl=txt.split(/\n\s*\n/);for(const b of bl){const ls=b.split('\n').filter(x=>x.trim());const i=ls.findIndex(x=>/-->/.test(x));if(i<0)continue;
+      const [a,z]=ls[i].split('-->').map(x=>x.trim().split(/\s/)[0]);let corpo=ls.slice(i+1).join(' '),quem='';
+      const v=corpo.match(/<v\s+([^>]+)>/);if(v)quem=v[1].trim();else{const c=corpo.match(/^([^:<]{2,60}):\s/);if(c){quem=c[1].trim();corpo=corpo.slice(c[0].length)}}
+      corpo=corpo.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();if(!corpo)continue;
+      const ult=falas[falas.length-1];if(ult&&ult.quem===quem&&hms2s(a)-ult.fim<2){ult.txt+=' '+corpo;ult.fim=hms2s(z);continue}
+      falas.push({quem:quem||'Sem nome',ini:hms2s(a),fim:hms2s(z),txt:corpo})}
+  }else{ /* .docx/.txt do Teams: "Nome Sobrenome   0:03" na linha de cima e a fala embaixo, ou "Nome: fala" */
+    let cur=null;for(const raw of txt.split('\n')){const x=raw.trim();if(!x)continue;
+      let m=x.match(/^(.{2,70}?)\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*$/)||x.match(/^(\d{1,2}:\d{2}(?::\d{2})?)\s+(.{2,70})$/);
+      if(m){const ehT=/^\d/.test(m[1]);const quem=(ehT?m[2]:m[1]).replace(/\s*(iniciou|parou) a transcrição.*$/i,'').trim(),t=hms2s(ehT?m[1]:m[2]);cur={quem,ini:t,fim:t,txt:''};falas.push(cur);continue}
+      m=x.match(/^([A-ZÁÉÍÓÚÂÊÔÃÕÇ][^:]{1,60}):\s+(.+)$/);if(m&&!/^(https?|obs|nota|data|assunto|local)$/i.test(m[1])){cur={quem:m[1].trim(),ini:cur?cur.fim:0,fim:cur?cur.fim:0,txt:m[2]};falas.push(cur);continue}
+      if(cur)cur.txt+=(cur.txt?' ':'')+x}
+    for(let i=0;i<falas.length;i++){const p=falas[i+1];if(p&&p.ini>falas[i].ini)falas[i].fim=p.ini}
+  }
+  const f=falas.filter(x=>x.txt);const dur=f.length?Math.max(...f.map(x=>x.fim||x.ini)):0;
+  const pes={};f.forEach(x=>{const p=pes[x.quem]||(pes[x.quem]={nome:x.quem,falas:0,seg:0,palavras:0});p.falas++;p.seg+=Math.max(0,(x.fim||x.ini)-x.ini);p.palavras+=x.txt.split(/\s+/).length});
+  return {falas:f,dur,pessoas:Object.values(pes).sort((a,b)=>b.palavras-a.palavras)};
+}
+async function lerDocxTexto(file){const z=await plUnzip(await file.arrayBuffer()),xml=await z.texto('word/document.xml');if(!xml)throw new Error('Arquivo .docx sem texto.');
+  const d=new DOMParser().parseFromString(xml,'application/xml');return [...d.getElementsByTagName('w:p')].map(p=>[...p.getElementsByTagName('w:t')].map(t=>t.textContent).join('')).join('\n')}
+/* frases que parecem ação/encaminhamento */
+const ACAO_RE=/\b(fica(r|m)? de|ficou de|ficaram de|vou|vai|vamos|iremos|irá|ir[aã]o|precisa(mos)?|enviar|encaminhar|providenciar|agendar|reagendar|verificar|revisar|reapresentar|apresentar|mandar|retornar|confirmar|aprovar|emitir|at[eé] (o )?(dia )?\d{1,2}|prazo|pend[eê]ncia|próxima reunião)\b/i;
+function sugerirAcoes(falas){const out=[],vist=new Set();
+  for(const f of falas)for(const fr of f.txt.split(/(?<=[.!?])\s+/)){const t=fr.trim();if(t.length<18||t.length>320||!ACAO_RE.test(t)||/^(bom dia|boa tarde|boa noite|ol[aá]|obrigad)/i.test(t)||/vamos (come[cç]ar|iniciar|l[aá])\b/i.test(t))continue;const k=abNorm(t).slice(0,60);if(vist.has(k))continue;vist.add(k);
+    const dm=t.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);let prazo='';if(dm){const hoje=new Date(),a=dm[3]?(+dm[3]<100?2000+ +dm[3]:+dm[3]):hoje.getFullYear();prazo=`${a}-${pad(+dm[2])}-${pad(+dm[1])}`;if(!dm[3]&&prazo<todayISO())prazo=`${a+1}-${pad(+dm[2])}-${pad(+dm[1])}`}
+    out.push({txt:t,resp:f.quem,prazo,em:f.ini})}
+  return out.slice(0,40)}
+const minTxt=s=>{s=Math.round(s||0);if(s<60)return s?`${s} s`:'0 min';const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h?`${h} h ${pad(m)} min`:`${m} min`};
+
+/* ---- telas ---- */
+RENDER.reunioes=m=>{
+  if(!S.acessos.length){acGate(m,'');return}
+  const ac=acById(S.acId)||(S.acessos.length===1?S.acessos[0]:null),F=S.frn,q=abNorm(F.q);
+  const rs=reunDoAc(ac).sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
+  const acs=rs.flatMap(r=>(r.acoes||[]).map((x,i)=>({...x,i,r}))).filter(x=>(x.st||'aberta')==='aberta').sort((a,b)=>String(a.prazo||'9999').localeCompare(String(b.prazo||'9999')));
+  const venc=acs.filter(x=>x.prazo&&x.prazo<todayISO()).length;
+  const l=rs.filter(r=>!F.st||r.status===F.st).filter(r=>!q||abNorm([r.assunto,r.tratado,r.local,(r.part||[]).map(p=>p.nome).join(' '),acCurto(acById(r.ac))].join(' ')).includes(q));
+  const head=ac?acHead(ac,'Reuniões',[{v:rs.length,l:'reuniões'},{v:acs.length,l:'ações em aberto'},{v:venc,l:'ações vencidas',c:venc?'alta':''}])
+    :`<div class="uhead"><div><span class="eyebrow">Todos os acessos${R.owner()?'':' em que você participa'}</span><h1>Reuniões</h1></div><div class="stats"><div class="stat"><b>${rs.length}</b><span>reuniões</span></div><div class="stat"><b>${acs.length}</b><span>ações em aberto</span></div><div class="stat${venc?' alta':''}"><b>${venc}</b><span>ações vencidas</span></div></div></div>`;
+  m.innerHTML=`<div class="view">${accessBanner()}${head}
+    <div class="filters"><div class="seg big" role="group" aria-label="Seção">${[['reunioes','Reuniões'],['acoes','Ações em aberto']].map(([k,t])=>`<button data-act="rn-aba" data-v="${k}" aria-pressed="${F.aba===k}">${t}</button>`).join('')}</div>
+      ${F.aba==='reunioes'?`<div class="seg" role="group" aria-label="Situação">${[['','Todas'],['rascunho','Rascunho'],['emitida','Ata emitida']].map(([k,t])=>`<button data-act="rn-st" data-v="${k}" aria-pressed="${F.st===k}">${t}</button>`).join('')}</div><input class="search" id="rnQ" type="search" placeholder="Buscar assunto, participante ou acesso" value="${esc(F.q)}">`:''}</div>
+    ${R.interno()?`<div class="actions"><button class="btn primary" data-act="rn-nova">Nova reunião</button><button class="btn" data-act="rn-nova" data-tx="1">Nova a partir da transcrição do Teams</button></div>`:''}
+    ${F.aba==='acoes'?`<section class="panel">${acs.length?`<div class="rows">${acs.map(x=>`<div class="row fxrow"><span style="min-width:0"><span class="row-t" style="white-space:normal">${esc(x.txt)}</span><span class="row-l">${esc(x.resp||'sem responsável')} · ${esc(x.r.assunto||'')} (${fmtISO(String(x.r.data||'').slice(0,10))})${ac?'':' · '+esc(acCurto(acById(x.r.ac)))}</span></span>
+        <span class="row-meta">${x.prazo?`<span class="chip ${x.prazo<todayISO()?'s-vencida':'tipo'}">até ${fmtISO(x.prazo)}</span>`:''}${R.interno()?`<button class="btn sm" data-act="rn-acao-ok" data-id="${esc(x.r.id)}" data-i="${x.i}">Concluir</button>`:''}</span></div>`).join('')}</div>`:'<div class="panel-b"><p class="muted" style="margin:0">Nenhuma ação em aberto.</p></div>'}</section>`
+    :`<section class="panel">${l.length?`<div class="rows">${l.map(r=>`<button class="row fxrow" data-act="rn-open" data-id="${esc(r.id)}"><span style="min-width:0"><span class="row-t">${esc(r.assunto||'Reunião')}</span><span class="row-l">${esc(dtTxt(r.data))}${r.dur?' · '+minTxt(r.dur):''} · ${(r.part||[]).length} participante(s)${ac?'':' · '+esc(acCurto(acById(r.ac)))}</span></span>
+      <span class="row-meta"><span class="chip ${r.status==='emitida'?'s-aprovado':'s-validacao'}">${esc(RST[r.status]||'Rascunho')}</span>${(r.acoes||[]).filter(x=>(x.st||'aberta')==='aberta').length?`<span class="chip tipo">${(r.acoes||[]).filter(x=>(x.st||'aberta')==='aberta').length} ação(ões)</span>`:''}</span></button>`).join('')}</div>`:`<div class="panel-b"><p class="muted" style="margin:0">${rs.length?'Nada nesta busca.':'Nenhuma reunião registrada.'}</p></div>`}</section>`}
+  </div>`};
+/* ---- formulário (rascunho em S.rd, grava ao salvar) ---- */
+function rnForm(r,tx){
+  const ac=r?acById(r.ac):(acById(S.acId)||(S.acessos.length===1?S.acessos[0]:null));
+  S.rd=r?JSON.parse(JSON.stringify(r)):{ac:ac?ac.id:'',assunto:'',data:'',modo:'Teams',local:'',part:[],pauta:'',tratado:'',decisoes:'',acoes:[],status:'rascunho'};
+  S.rdSug=null;S.rdTx=!!tx&&!r;
+  pushSheet({title:r?'Editar reunião':'Nova reunião',render:rnFormHTML});
+}
+function rnFormHTML(){const d=S.rd;const fA=(x,i)=>`<div class="box" style="gap:6px"><textarea data-rd="acoes.${i}.txt" rows="2" ${TA}>${esc(x.txt)}</textarea><div class="grid2"><input class="search" data-rd="acoes.${i}.resp" value="${esc(x.resp||'')}" placeholder="Responsável"><input class="search" type="date" data-rd="acoes.${i}.prazo" value="${esc(x.prazo||'')}"></div><div><button class="btn sm danger" type="button" data-act="rd-acao-rm" data-i="${i}">Remover ação</button></div></div>`;
+  return `<form class="form" data-form="rn">
+    ${S.rdTx||d.tx?`<div class="callout"><b>Transcrição do Teams</b>${d.tx?`<span>${esc(d.tx.arq?.nome||'transcrição')} · ${minTxt(d.tx.dur)} · ${d.tx.pessoas.length} pessoa(s) falaram · ${d.tx.n} fala(s)</span>`:'<span class="hint">Exporte a transcrição no Teams (Transcrição → Baixar .vtt ou .docx) e escolha o arquivo. O SIGA preenche participantes, duração e sugere as ações.</span>'}
+      <div class="pick"><label for="rnTx">${CLIP}${d.tx?'Trocar a transcrição':'Escolher transcrição (.vtt, .docx ou .txt)'}<input type="file" id="rnTx" accept=".vtt,.docx,.txt"></label></div></div>`:''}
+    ${S.rdSug&&S.rdSug.length?`<div class="box"><h4>Ações sugeridas pela transcrição</h4><p class="hint" style="margin:0">Marque as que valem. Você ajusta o texto, o responsável e o prazo depois.</p><div class="req-sel">${S.rdSug.map((x,i)=>`<label class="chk"><input type="checkbox" data-sug="${i}"${x.ok?' checked':''}> <span><b>${esc(x.resp)}</b> ${esc(x.txt)}${x.prazo?` <span class="chip tipo">${fmtISO(x.prazo)}</span>`:''}</span></label>`).join('')}</div><div class="actions"><button class="btn sm" type="button" data-act="rd-sug-ok">Incluir as marcadas</button></div></div>`:''}
+    <label>Projeto de acesso<select data-rd="ac" required><option value="">— escolha —</option>${S.acessos.map(a=>`<option value="${esc(a.id)}"${d.ac===a.id?' selected':''}>${esc(acNome(a))}</option>`).join('')}</select></label>
+    <label>Assunto<input data-rd="assunto" required maxlength="160" value="${esc(d.assunto)}" placeholder="ex.: Reunião de kick-off do acesso"></label>
+    <div class="grid2"><label>Data e hora<input type="datetime-local" data-rd="data" required value="${esc(d.data)}"></label><label>Duração (min)<input type="number" min="0" data-rd="durMin" value="${d.dur?Math.round(d.dur/60):''}"></label>
+      <label>Forma<select data-rd="modo">${['Teams','Presencial','Híbrida'].map(x=>`<option${d.modo===x?' selected':''}>${x}</option>`).join('')}</select></label><label>Local<input data-rd="local" maxlength="120" value="${esc(d.local||'')}"></label></div>
+    <label>Participantes (um por linha: Nome — Empresa)<textarea data-rd="partTxt" rows="4" ${TA}>${esc((d.part||[]).map(p=>p.nome+(p.emp?' — '+p.emp:'')).join('\n'))}</textarea></label>
+    <label>Pauta<textarea data-rd="pauta" rows="2" maxlength="3000" ${TA}>${esc(d.pauta||'')}</textarea></label>
+    <label>O que foi tratado<textarea data-rd="tratado" rows="6" maxlength="12000" ${TA}>${esc(d.tratado||'')}</textarea></label>
+    <label>Decisões<textarea data-rd="decisoes" rows="3" maxlength="6000" ${TA}>${esc(d.decisoes||'')}</textarea></label>
+    <div class="sec-row"><span class="sec-t">Ações (${(d.acoes||[]).length})</span><button class="btn sm" type="button" data-act="rd-acao-add">Incluir ação</button></div>
+    ${(d.acoes||[]).map(fA).join('')}
+    <p class="ferr"></p><div class="actions"><button class="btn primary" type="submit">Salvar rascunho</button>${d.id?`<button class="btn" type="button" data-act="rn-ata" data-id="${esc(d.id)}">Emitir ata em PDF</button>`:''}</div></form>`}
+function rnOpen(id){pushSheet({title:()=>((S.reun||[]).find(x=>x.id===id)||{}).assunto||'Reunião',live:true,render:()=>{
+  const r=(S.reun||[]).find(x=>x.id===id);if(!r)return '<p class="hint">Reunião não encontrada.</p>';const ac=acById(r.ac);
+  return `<div class="det-h"><span class="crumb">${esc(acNome(ac))}</span><h3>${esc(r.assunto)}</h3><div class="chips"><span class="chip ${r.status==='emitida'?'s-aprovado':'s-validacao'}">${esc(RST[r.status]||'Rascunho')}</span><span class="chip tipo">${esc(r.modo||'')}</span></div></div>
+    <dl class="dl"><dt>Data</dt><dd>${esc(dtTxt(r.data))}${r.dur?' · '+minTxt(r.dur):''}</dd>${r.local?`<dt>Local</dt><dd>${esc(r.local)}</dd>`:''}<dt>Participantes</dt><dd>${(r.part||[]).map(p=>esc(p.nome)+(p.emp?` <span class="muted">· ${esc(p.emp)}</span>`:'')).join('<br>')||'—'}</dd></dl>
+    ${r.pauta?`<div class="box"><h4>Pauta</h4><p class="desc">${esc(r.pauta)}</p></div>`:''}
+    <div class="box"><h4>O que foi tratado</h4><p class="desc">${esc(r.tratado||'—')}</p></div>
+    ${r.decisoes?`<div class="box"><h4>Decisões</h4><p class="desc">${esc(r.decisoes)}</p></div>`:''}
+    <div class="box"><h4>Ações</h4>${(r.acoes||[]).length?`<div class="plan-l">${r.acoes.map((x,i)=>`<div class="plan-r"><span style="min-width:0"><b>${i+1}.</b> ${esc(x.txt)}<span class="crumb" style="display:block">${esc(x.resp||'sem responsável')}${x.prazo?' · até '+fmtISO(x.prazo):''}</span></span>${(x.st||'aberta')==='aberta'&&R.interno()?`<button class="btn sm" data-act="rn-acao-ok" data-id="${esc(r.id)}" data-i="${i}">Concluir</button>`:`<span class="chip ${(x.st||'aberta')==='concluida'?'s-aprovado':x.prazo&&x.prazo<todayISO()?'s-vencida':'tipo'}">${esc(AST[x.st||'aberta'])}</span>`}</div>`).join('')}</div>`:'<p class="hint">Nenhuma ação.</p>'}</div>
+    ${r.tx?`<div class="box"><h4>Transcrição</h4><p class="hint" style="margin:0">${minTxt(r.tx.dur)} · ${r.tx.n} fala(s)</p><div class="plan-l">${r.tx.pessoas.map(p=>`<div class="plan-r"><span>${esc(p.nome)}</span><span class="mono">${p.falas} fala(s) · ${minTxt(p.seg)}</span></div>`).join('')}</div>${r.tx.arq?arqsHTML([r.tx.arq]):''}</div>`:''}
+    <div class="box"><h4>Ata</h4>${r.ata?arqsHTML([r.ata]):'<p class="hint">Ata ainda não emitida.</p>'}${R.interno()?`<div class="actions"><button class="btn${r.ata?'':' primary'}" data-act="rn-ata" data-id="${esc(r.id)}">${r.ata?'Emitir de novo':'Emitir ata em PDF'}</button></div>`:''}</div>
+    ${R.interno()?`<div class="actions"><button class="btn" data-act="rn-edit" data-id="${esc(r.id)}">Editar</button></div>`:''}
+    ${(r.hist||[]).length?`<div class="box"><h4>Histórico</h4>${histHTML(r.hist,e=>e.st==='emitida'?'Ata emitida':'Registro')}</div>`:''}`}})}
+/* ---- ata em PDF ---- */
+function ataPDF(r){const ac=acById(r.ac)||{},se=acSE(ac),ag=acAgente(ac);
+  const D=pdfDoc('Ata de reunião',`${acNome(ac)} · ${se?se.nome:''}`);
+  pdfSec(D,'Identificação');pdfPares(D,[['Assunto',r.assunto],['Data',dtTxt(r.data)],['Duração',r.dur?minTxt(r.dur):''],['Projeto de acesso',acNome(ac)],['Subestação',se?se.nome:''],['Acessante',ag?ag.nome:''],['Forma',r.modo],['Local',r.local]],2);
+  pdfSec(D,'Participantes');D.table([{w:2},{w:1.4}],['Nome','Empresa'],(r.part||[]).map(p=>[p.nome,p.emp||'']),{headFill:PC.verde,size:8.5,hsize:8});D.y+=6;
+  if(r.pauta){pdfSec(D,'Pauta');pdfTexto(D,r.pauta)}
+  pdfSec(D,'O que foi tratado');pdfTexto(D,r.tratado||'-');
+  if(r.decisoes){pdfSec(D,'Decisões');pdfTexto(D,r.decisoes)}
+  pdfSec(D,'Ações');if((r.acoes||[]).length){D.table([{w:.35,align:'center'},{w:3.6},{w:1.5},{w:.9,align:'center'}],['#','Ação','Responsável','Prazo'],r.acoes.map((x,i)=>[String(i+1),x.txt,x.resp||'',x.prazo?fmtISO(x.prazo):'']),{headFill:PC.verde,size:8.3,hsize:8});D.y+=6}else pdfTexto(D,'Nenhuma ação registrada.');
+  if(r.tx&&r.tx.pessoas.length){pdfSec(D,'Transcrição do Teams (resumo)');D.table([{w:2.6},{w:.8,align:'center'},{w:.9,align:'center'}],['Quem falou','Falas','Tempo'],r.tx.pessoas.map(p=>[p.nome,String(p.falas),minTxt(p.seg)]),{headFill:PC.verde,size:8.3,hsize:8});D.y+=4;pdfTexto(D,`Arquivo da transcrição: ${r.tx.arq?r.tx.arq.nome:'-'} (guardado no Drive do SIGA).`)}
+  D.ensure(60);pdfTexto(D,`Ata emitida por ${nameOf(S.me.id)} em ${new Date().toLocaleString('pt-BR')}.`);
+  return pdfBlob(D)}
+async function rnEmitir(id){const r=(S.reun||[]).find(x=>x.id===id);if(!r)return;
+  try{toast('Gerando a ata…');const blob=ataPDF(r),nome=`Ata ${String(r.data||'').slice(0,10)} - ${limpaNome(r.assunto).slice(0,60)}.pdf`;
+    const up=await S.assets.upload(new File([blob],nome,{type:'application/pdf'}),{type:'application/pdf',pasta:pastaAc(r.ac,'Atas')});
+    const {id:_i,...d}=r;await S.db.doc('reunioes/'+id).set({...d,status:'emitida',ata:{id:up.id,nome,tipo:'application/pdf',tam:blob.size,em:Date.now(),por:S.me.id},hist:[...(r.hist||[]),{em:Date.now(),por:S.me.id,st:'emitida',obs:nome}]});
+    toast('Ata emitida e guardada no Drive');try{await S.dl.save({filename:nome,data:blob})}catch(e){}
+  }catch(e){toast(errMsg(e))}}
+async function rnSalva(f){const d=S.rd,er=f.querySelector('.ferr'),bt=f.querySelector('button[type=submit]');er.textContent='';
+  try{if(!d.ac)throw erro('Escolha o projeto de acesso.');if(!d.assunto.trim())throw erro('Informe o assunto.');if(!d.data)throw erro('Informe a data.');
+    bt.disabled=true;const id=d.id||novoId('R');
+    if(d.txFile){const a=(await subirVarios([d.txFile],pastaAc(d.ac,'Atas','Transcrições'),er))[0];d.tx.arq=a;delete d.txFile}
+    const {id:_i,txFile,partTxt,durMin,...dados}=d;
+    dados.acoes=(dados.acoes||[]).filter(x=>String(x.txt||'').trim()).map(x=>({...x,st:x.st||'aberta',id:x.id||novoId('a')}));
+    await S.db.doc('reunioes/'+id).set({...dados,criadoEm:d.criadoEm||Date.now(),por:d.por||S.me.id,hist:[...(d.hist||[]),{em:Date.now(),por:S.me.id,st:'rascunho',obs:d.id?'Alterada':'Registrada'}]});
+    S.rd.id=id;S.rd.criadoEm=dados.criadoEm||Date.now();toast('Reunião salva');closeSheet();rnOpen(id);
+  }catch(x){er.textContent=errMsg(x)}finally{if(bt.isConnected)bt.disabled=false}}
+function rdSet(path,v){const d=S.rd;if(!d)return;const p=path.split('.');
+  if(path==='partTxt'){d.part=v.split('\n').map(x=>x.trim()).filter(Boolean).map(x=>{const [n,...e]=x.split(/\s+[—–-]\s+/);return {nome:n.trim(),emp:e.join(' - ').trim()}});return}
+  if(path==='durMin'){d.dur=(parseFloat(v)||0)*60;return}
+  if(p[0]==='acoes'){d.acoes[+p[1]][p[2]]=v;return}d[path]=v}
+Object.assign(ACT,{
+  'rn-aba':b=>{S.frn.aba=b.dataset.v;renderView()},'rn-st':b=>{S.frn.st=b.dataset.v;renderView()},
+  'rn-nova':b=>rnForm(null,!!b.dataset.tx),'rn-open':b=>rnOpen(b.dataset.id),'rn-edit':b=>rnForm((S.reun||[]).find(x=>x.id===b.dataset.id)),
+  'rn-ata':b=>{if(S.rd&&S.rd.id===b.dataset.id&&$('form[data-form=rn]'))return toast('Salve o rascunho antes de emitir.');rnEmitir(b.dataset.id)},
+  'rd-acao-add':()=>{S.rd.acoes.push({txt:'',resp:'',prazo:''});rerenderTop()},'rd-acao-rm':b=>{S.rd.acoes.splice(+b.dataset.i,1);rerenderTop()},
+  'rd-sug-ok':()=>{const n=S.rdSug.filter(x=>x.ok);n.forEach(x=>S.rd.acoes.push({txt:x.txt,resp:x.resp,prazo:x.prazo}));S.rdSug=S.rdSug.filter(x=>!x.ok);rerenderTop();toast(n.length+' ação(ões) incluída(s)')},
+  'rn-acao-ok':b=>{const r=(S.reun||[]).find(x=>x.id===b.dataset.id);if(!r)return;const ac=JSON.parse(JSON.stringify(r.acoes||[]));const x=ac[+b.dataset.i];if(!x)return;x.st='concluida';x.fimEm=Date.now();x.fimPor=S.me.id;
+    const {id,...d}=r;dbDo(()=>S.db.doc('reunioes/'+r.id).set({...d,acoes:ac,hist:[...(r.hist||[]),{em:Date.now(),por:S.me.id,st:r.status,obs:'Ação concluída: '+x.txt.slice(0,80)}]}),'Ação concluída')},
+});
+document.addEventListener('input',e=>{const t=e.target;if(!t)return;if(t.id==='rnQ'){S.frn.q=t.value;clearTimeout(S.rnT);S.rnT=setTimeout(renderView,150)}else if(t.dataset&&t.dataset.rd)rdSet(t.dataset.rd,t.value)});
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+  if(t.dataset&&t.dataset.rd){rdSet(t.dataset.rd,t.value);return}
+  if(t.dataset&&t.dataset.sug!=null){S.rdSug[+t.dataset.sug].ok=t.checked;return}
+  if(t.id==='rnTx'){const f=t.files&&t.files[0];t.value='';if(!f)return;(async()=>{try{
+    const txt=/\.docx$/i.test(f.name)?await lerDocxTexto(f):await f.text();const tx=lerTranscricao(txt);if(!tx.falas.length)throw new Error('Não encontrei falas neste arquivo. Use a transcrição exportada do Teams (.vtt ou .docx).');
+    const d=S.rd;d.tx={dur:tx.dur,n:tx.falas.length,pessoas:tx.pessoas.map(p=>({nome:p.nome,falas:p.falas,seg:Math.round(p.seg),palavras:p.palavras})),arq:null};d.txFile=f;d.dur=d.dur||tx.dur;
+    const ja=new Set((d.part||[]).map(p=>abNorm(p.nome)));tx.pessoas.forEach(p=>{if(!ja.has(abNorm(p.nome))&&p.nome!=='Sem nome')d.part.push({nome:p.nome,emp:''})});
+    const m=String(f.name).match(/(\d{4})-?(\d{2})-?(\d{2})/);if(!d.data&&m)d.data=`${m[1]}-${m[2]}-${m[3]}T09:00`;
+    if(!d.assunto)d.assunto=String(f.name).replace(/\.(vtt|docx|txt)$/i,'').replace(/[-_]+/g,' ').replace(/\b(transcri[cç][aã]o|transcript|meeting|reuni[aã]o)\b/ig,'').trim().slice(0,120);
+    S.rdSug=sugerirAcoes(tx.falas);rerenderTop();toast(`${tx.falas.length} falas de ${tx.pessoas.length} pessoa(s) · ${S.rdSug.length} ação(ões) sugerida(s)`)}catch(x){toast(errMsg(x))}})()}
+});
+document.addEventListener('submit',e=>{const f=e.target;if(!f||!f.dataset||f.dataset.form!=='rn')return;e.preventDefault();rnSalva(f)});
+
+/* ================= E-mails importantes: registrados pelo script do Gmail ou importados (.eml); só a Neoenergia vê ================= */
+/* do gmail/Emails.gs */
+function limparCorpo(t) {
+  var l = String(t || '').replace(/\r\n?/g, '\n').split('\n'), out = [];
+  var corte = /^\s*(Em .{4,200}escreveu:?\s*$|On .{4,200}wrote:?\s*$|-{2,}\s*(Original Message|Mensagem original|Forwarded message|Mensagem encaminhada)\s*-{2,}|_{10,}|De:\s.+|From:\s.+)/i;
+  for (var i = 0; i < l.length; i++) {
+    var x = l[i];
+    if (corte.test(x)) {
+      if (/^\s*(De|From):\s/i.test(x)) { var prox = (l[i + 1] || '') + (l[i + 2] || '') + (l[i + 3] || ''); if (!/(Enviad[oa]|Sent|Para|To|Assunto|Subject|Data|Date):/i.test(prox)) { out.push(x); continue; } }
+      break;
+    }
+    if (/^\s*>/.test(x)) continue;
+    if (/^--\s*$/.test(x)) break;
+    out.push(x.replace(/\s+$/, ''));
+  }
+  var s = out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return s.length > 8000 ? s.slice(0, 8000) + '\n[…texto cortado no resumo…]' : s;
+}
+
+S.fem={st:'todos',q:''};
+const emails=()=>(S.emails||[]).filter(e=>!e.ac||acById(e.ac));
+const emQuando=e=>e.data?new Date(e.data).getTime():(e.em||0);
+const nomeDe=s=>{s=String(s||'');const m=s.match(/^\s*"?([^"<]+?)"?\s*</);return m?m[1].trim():s.replace(/[<>]/g,'').trim()};
+RENDER.emails=m=>{
+  if(!R.interno()){m.innerHTML=`<div class="view">${accessBanner()}<section class="panel"><div class="panel-b empty-st"><h2>E-mails</h2><p class="muted" style="margin:0">Os e-mails importantes são vistos só pela Neoenergia.</p></div></section></div>`;return}
+  if(!S.acessos.length&&!R.owner()){acGate(m,'');return}
+  const ac=acById(S.acId)||(!R.owner()&&S.acessos.length===1?S.acessos[0]:null),F=S.fem,q=abNorm(F.q),d7=Date.now()-7*864e5;
+  const base=emails().filter(e=>!ac||e.ac===ac.id),semAc=emails().filter(e=>!e.ac);
+  const l=(F.st==='sem'?semAc:base).filter(e=>!q||abNorm([e.assunto,e.de,e.para,e.cc,e.resumo,acCurto(acById(e.ac))].join(' ')).includes(q)).sort((a,b)=>emQuando(b)-emQuando(a));
+  const stats=[{v:base.length,l:'e-mails'},{v:base.filter(e=>emQuando(e)>d7).length,l:'últimos 7 dias'},...(R.owner()?[{v:semAc.length,l:'sem acesso',c:semAc.length?'alta':''}]:[])];
+  m.innerHTML=`<div class="view">${accessBanner()}
+    ${ac?acHead(ac,'E-mails importantes',stats):`<div class="uhead"><div><span class="eyebrow">Caixa de gestão de acesso em cópia</span><h1>E-mails importantes</h1></div><div class="stats">${stats.map(s=>`<div class="stat${s.c?' '+s.c:''}"><b>${s.v}</b><span>${esc(s.l)}</span></div>`).join('')}</div></div>`}
+    <div class="filters">${R.owner()?`<div class="seg" role="group" aria-label="Seleção"><button data-act="em-st" data-v="todos" aria-pressed="${F.st==='todos'}">${ac?'Deste acesso':'Todos'}</button><button data-act="em-st" data-v="sem" aria-pressed="${F.st==='sem'}">Sem acesso (${semAc.length})</button></div>`:''}
+      <input class="search" id="emQ" type="search" placeholder="Buscar assunto, remetente ou texto" value="${esc(F.q)}"></div>
+    <div class="actions"><button class="btn primary" data-act="em-imp">Importar e-mail (.eml)</button>${R.owner()?`<button class="btn" data-act="em-script">Script do Gmail</button>`:''}</div>
+    <section class="panel">${l.length?`<div class="rows">${l.map(e=>`<button class="row fxrow" data-act="em-open" data-id="${esc(e.id)}"><span style="min-width:0"><span class="row-t">${esc(e.assunto||'(sem assunto)')}</span><span class="row-l">${esc(nomeDe(e.de))} · ${fmtDH(emQuando(e))}${ac?'':' · '+(e.ac?esc(acCurto(acById(e.ac))):'sem acesso')}</span></span>
+      <span class="row-meta">${e.ac?'':'<span class="chip c-media">sem acesso</span>'}${(e.anexos||[]).length?`<span class="chip tipo">${e.anexos.length} anexo(s)</span>`:''}${e.origem==='gmail'?'<span class="chip tipo">Gmail</span>':''}</span></button>`).join('')}</div>`
+      :`<div class="panel-b"><p class="muted" style="margin:0">${F.st==='sem'?'Nenhum e-mail sem acesso.':'Nenhum e-mail registrado. Instale o script do Gmail (administrador) ou importe um .eml.'}</p></div>`}</section></div>`};
+function emOpen(id){pushSheet({title:'E-mail',live:true,render:()=>{const e=(S.emails||[]).find(x=>x.id===id);if(!e)return '<p class="hint">E-mail não encontrado.</p>';
+  return `<div class="det-h"><span class="crumb">${e.ac?esc(acNome(acById(e.ac))):'Sem acesso'}</span><h3>${esc(e.assunto||'(sem assunto)')}</h3></div>
+    <dl class="dl"><dt>Data</dt><dd>${fmtDH(emQuando(e))}</dd><dt>De</dt><dd>${esc(e.de||'—')}</dd><dt>Para</dt><dd>${esc(e.para||'—')}</dd><dt>Cópia</dt><dd>${esc(e.cc||'—')}</dd>
+      <dt>Anexos</dt><dd>${(e.anexos||[]).length?e.anexos.map(esc).join('<br>')+'<br><span class="muted">(não guardados)</span>':'nenhum'}</dd><dt>Registro</dt><dd>${e.origem==='gmail'?'Script do Gmail':'Importado por '+esc(nameOf(e.por))} · ${fmtDH(e.em)}</dd></dl>
+    <div class="actions">${e.pdf?`<a class="btn primary" href="${fileView(e.pdf)}" target="_blank" rel="noopener">Abrir o PDF do resumo</a>`:''}${e.link?`<a class="btn" href="${esc(e.link)}" target="_blank" rel="noopener">Abrir no Gmail</a>`:''}</div>
+    ${R.owner()?`<form class="form box" data-form="em-ac" data-id="${esc(e.id)}"><span class="sec-t">Projeto de acesso</span><div class="grid2"><select name="ac" class="sel"><option value="">— sem acesso —</option>${S.acessos.map(a=>`<option value="${esc(a.id)}"${e.ac===a.id?' selected':''}>${esc(acNome(a))}</option>`).join('')}</select><button class="btn" type="submit">Mover</button></div><p class="ferr"></p></form>`:''}
+    <div class="box"><h4>Resumo</h4><p class="em-corpo">${esc(e.resumo||'(sem texto)')}</p></div>
+    ${R.owner()?`<div class="dangerzone"><button class="btn sm danger" data-act="em-del" data-id="${esc(e.id)}">Excluir registro</button></div>`:''}`}})}
+/* ---- .eml: cabeçalho, texto (quoted-printable/base64, utf-8/latin-1) e nomes dos anexos ---- */
+function decPalavras(s){return String(s||'').replace(/=\?([^?]+)\?([bBqQ])\?([^?]*)\?=(\s+(?==\?))?/g,(m,cs,enc,t)=>{try{let b;if(/b/i.test(enc))b=Uint8Array.from(atob(t),c=>c.charCodeAt(0));else{const x=t.replace(/_/g,' ').replace(/=([0-9A-F]{2})/gi,(a,h)=>String.fromCharCode(parseInt(h,16)));b=Uint8Array.from(x,c=>c.charCodeAt(0))}return new TextDecoder(cs.toLowerCase()).decode(b)}catch(e){return t}})}
+function emlPartes(raw){const i=raw.search(/\r?\n\r?\n/);const hTxt=i<0?raw:raw.slice(0,i),corpo=i<0?'':raw.slice(i).replace(/^\r?\n\r?\n/,'');
+  const h={};hTxt.replace(/\r?\n[ \t]+/g,' ').split(/\r?\n/).forEach(l=>{const m=l.match(/^([\w-]+):\s*(.*)$/);if(m)h[m[1].toLowerCase()]=(h[m[1].toLowerCase()]?h[m[1].toLowerCase()]+', ':'')+m[2]});return {h,corpo}}
+function emlDecodar(p){const ct=p.h['content-type']||'text/plain',cs=((ct.match(/charset="?([^";\s]+)/i)||[])[1]||'utf-8').toLowerCase(),te=(p.h['content-transfer-encoding']||'').toLowerCase();let bin=p.corpo;
+  if(te==='base64')try{bin=atob(bin.replace(/\s+/g,''))}catch(e){}else if(te==='quoted-printable')bin=bin.replace(/=\r?\n/g,'').replace(/=([0-9A-F]{2})/gi,(a,x)=>String.fromCharCode(parseInt(x,16)));
+  try{return new TextDecoder(cs).decode(Uint8Array.from(bin,c=>c.charCodeAt(0)&255))}catch(e){return bin}}
+function emlLer(raw){const top=emlPartes(raw),anexos=[];let txt='',html='';
+  const andar=p=>{const ct=(p.h['content-type']||'text/plain').toLowerCase(),cd=p.h['content-disposition']||'';
+    const nome=decPalavras(((cd+';'+ct).match(/(?:file)?name\*?="?([^";]+)/i)||[])[1]||'');
+    if(/^multipart\//.test(ct)){const bd=((p.h['content-type']).match(/boundary="?([^";]+)"?/i)||[])[1];if(!bd)return;p.corpo.split('--'+bd).slice(1).forEach(x=>{if(/^--/.test(x))return;andar(emlPartes(x.replace(/^\r?\n/,'')))});return}
+    if(/attachment/i.test(cd)||(nome&&!/^text\/(plain|html)/.test(ct))){if(nome)anexos.push(nome);return}
+    if(/^text\/plain/.test(ct)&&!txt)txt=emlDecodar(p);else if(/^text\/html/.test(ct)&&!html)html=emlDecodar(p)};
+  andar(top);
+  if(!txt&&html){const d=new DOMParser().parseFromString(html.replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div|tr|li)>/gi,'\n'),'text/html');txt=d.body?d.body.textContent:''}
+  const H=k=>decPalavras(top.h[k]||'');let dt=Date.parse(top.h.date||'');
+  return {msgId:(top.h['message-id']||'').replace(/[<>\s]/g,''),de:H('from'),para:H('to'),cc:H('cc'),data:isNaN(dt)?new Date().toISOString():new Date(dt).toISOString(),assunto:H('subject')||'(sem assunto)',resumo:limparCorpo(txt),anexos}}
+function emPDF(e){const D=pdfDoc('Resumo de e-mail',e.assunto.slice(0,90));pdfSec(D,'Cabeçalho');pdfPares(D,[['Assunto',e.assunto],['Data',fmtDH(emQuando(e))],['De',e.de],['Para',e.para],['Cópia',e.cc],['Anexos',(e.anexos||[]).length?e.anexos.join('; ')+' (não guardados)':'nenhum']],2);
+  pdfSec(D,'Texto');pdfTexto(D,e.resumo||'(sem texto)');pdfTexto(D,'Resumo gerado pelo SIGA: o histórico citado da conversa e os anexos não fazem parte deste documento.');return pdfBlob(D)}
+const hashId=s=>{let h=5381;for(const c of String(s))h=((h*33)^c.charCodeAt(0))>>>0;return h.toString(36)};
+function emImp(){const ac=acById(S.acId)||(S.acessos.length===1?S.acessos[0]:null);pushSheet({title:'Importar e-mail',render:()=>`<form class="form" data-form="em-imp">
+  <p class="hint" style="margin:0">No Gmail: abra o e-mail → ⋮ → <b>Fazer o download da mensagem</b> (.eml). No Outlook: arraste o e-mail para a área de trabalho ou use <b>Salvar como</b> e escolha .eml. O SIGA guarda só o resumo em PDF, sem os anexos.</p>
+  <label>Projeto de acesso<select name="ac"${R.owner()?'':' required'}><option value="">${R.owner()?'— sem acesso —':'— escolha —'}</option>${S.acessos.map(a=>`<option value="${esc(a.id)}"${ac&&ac.id===a.id?' selected':''}>${esc(acNome(a))}</option>`).join('')}</select></label>
+  ${pickArq('emArq','Escolher e-mail(s) .eml',true,'.eml,message/rfc822')}
+  <p class="ferr"></p><div class="actions"><button class="btn primary" type="submit">Importar</button></div></form>`})}
+async function emImpSalva(f){const fd=new FormData(f),acId=String(fd.get('ac')||''),inp=f.querySelector('#emArq'),er=f.querySelector('.ferr'),bt=f.querySelector('button[type=submit]');er.textContent='';
+  if(!inp.files.length){er.textContent='Escolha o arquivo .eml.';return}if(!acId&&!R.owner()){er.textContent='Escolha o projeto de acesso.';return}
+  bt.disabled=true;let n=0,rep=0;
+  try{for(const file of inp.files){if(/\.msg$/i.test(file.name))throw erro(`${file.name}: arquivo .msg do Outlook não é lido. Salve o e-mail como .eml.`);
+      const buf=new Uint8Array(await file.arrayBuffer());let raw='';for(let i=0;i<buf.length;i+=8192)raw+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));
+      const e=emlLer(raw),id='E'+hashId(e.msgId||raw.slice(0,4000));
+      if((S.emails||[]).some(x=>x.id===id||(e.msgId&&x.msgId===e.msgId))){rep++;continue}
+      er.textContent=`Gerando o PDF de ${file.name}…`;const blob=emPDF({...e,em:Date.now()});const nome=`${e.data.slice(0,10)} - ${limpaNome(e.assunto).slice(0,80)}.pdf`;
+      const up=await S.assets.upload(new File([blob],nome,{type:'application/pdf'}),{type:'application/pdf',pasta:acId?pastaAc(acId,'E-mails'):['E-mails sem acesso']});
+      await S.db.doc('emails/'+id).set({...e,ac:acId||null,pdf:up.id,origem:'eml',em:Date.now(),por:S.me.id});n++}
+    er.textContent='';closeSheet();toast(`${n} e-mail(s) importado(s)${rep?` · ${rep} já existia(m)`:''}`)
+  }catch(x){er.textContent=errMsg(x)}finally{if(bt.isConnected)bt.disabled=false}}
+function emScript(){pushSheet({title:'Script do Gmail',render:()=>`<div class="callout"><b>Como funciona</b><span>Um script na conta Google da caixa de gestão de acesso olha o Gmail a cada 15 minutos. Todo e-mail com a caixa em cópia vira um PDF com o resumo (cabeçalho e texto, sem o histórico e sem os anexos) e entra aqui no acesso cujo código ou palavra-chave aparece no assunto (ou no começo do texto). O que não casar fica em "Sem acesso".</span></div>
+  <ol class="desc" style="padding-left:18px;margin:0"><li>Gere a chave abaixo e copie.</li><li>Com a conta da caixa de gestão de acesso, abra script.google.com → Novo projeto → cole o arquivo <b>Emails.gs</b> (pasta "5 - Gmail" do pacote).</li><li>Preencha no topo: endereço e chave do Supabase do SIGA, a chave gerada aqui e o e-mail da caixa.</li><li>Escolha a função <b>instalar</b> e clique em Executar. Autorize.</li></ol>
+  <div class="box"><h4>Chave do script</h4><p class="hint" style="margin:0">Gerar uma chave nova desliga a anterior: o script antigo para de registrar até receber a nova.</p><div id="emChave"></div><div class="actions"><button class="btn primary" data-act="em-chave">Gerar chave</button></div></div>
+  <p class="hint">Palavras-chave de cada acesso: Cadastros → Projetos de acesso → Editar.</p>`})}
+Object.assign(ACT,{
+  'em-st':b=>{S.fem.st=b.dataset.v;renderView()},'em-open':b=>emOpen(b.dataset.id),'em-imp':()=>emImp(),'em-script':()=>emScript(),
+  'em-chave':b=>arm(b,'Gerar? A anterior deixa de valer',async()=>{try{const k=await SB.rpc('siga_email_chave');const el=$('#emChave');if(el)el.innerHTML=`<p class="mono" style="font-size:15px;word-break:break-all;margin:0" id="emChaveV">${esc(k)}</p><button class="btn sm" data-act="u-copy" data-c="${esc(k)}">Copiar chave</button>`;toast('Chave gerada')}catch(e){toast(errMsg(e))}}),
+  'em-del':b=>arm(b,'Confirmar exclusão',()=>dbDo(async()=>{await S.db.doc('emails/'+b.dataset.id).delete();closeSheet()},'Registro excluído')),
+});
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='emQ'){S.fem.q=t.value;clearTimeout(S.emT);S.emT=setTimeout(renderView,150)}});
+document.addEventListener('submit',e=>{const f=e.target;const k=f&&f.dataset&&f.dataset.form;if(!['em-imp','em-ac'].includes(k))return;e.preventDefault();
+  if(k==='em-imp')return emImpSalva(f);
+  const x=(S.emails||[]).find(y=>y.id===f.dataset.id);if(!x)return;const ac=String(new FormData(f).get('ac')||'')||null;const {id,...d}=x;
+  dbDo(()=>S.db.doc('emails/'+x.id).set({...d,ac,auto:false}),ac?'E-mail movido para '+acCurto(acById(ac)):'E-mail sem acesso')});
 
 /* ================= dados: Supabase (registros e login) e Google Drive (arquivos) — base: camada do SGC rev. 8 =================
    Tudo do SIGA tem nome próprio (siga.*, banco local "siga", funções siga_*) para conviver com o SGC no mesmo endereço do GitHub. */
@@ -1686,7 +2035,7 @@ function init(){
   sub('agentes','agentes',(a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
   sub('acessos','acessos',(a,b)=>String(a.codigo||a.nome).localeCompare(String(b.codigo||b.nome),'pt-BR',{numeric:true}));
   sub('usuarios','users',(a,b)=>(a.tipo==='admin'?-1:b.tipo==='admin'?1:String(a.nome).localeCompare(String(b.nome),'pt-BR')));
-  sub('projetos','projs');sub('pex','pexs');sub('si','sis');sub('testes','tests');sub('energ','energ');
+  sub('projetos','projs');sub('reunioes','reun');sub('emails','emails');sub('pex','pexs');sub('si','sis');sub('testes','tests');sub('energ','energ');
   S.db.collection('contatos').onSnapshot(snap=>{S.contatos=Object.fromEntries(snap.docs.map(d=>[d.id,d.data()]));onData()});
   S.db.doc('config/app').onSnapshot(d=>{S.cfgApp=d.exists?d.data():null;onData()});
   refresh();
