@@ -1,0 +1,1198 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#173A34">
+<title>SIGA — Sistema de Gestão de Acessantes</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="SIGA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="config.js"></script>
+<style>
+/* Layout: app shell — sticky header (brand + SE + tabs), one working column, yellow "tag" FAB, drawer/bottom sheet for details and forms; bottom nav on phone */
+:root{
+  --bg:#E9EDEB; --surface:#FFFFFF; --surface-2:#F3F6F4; --ink:#131A18; --ink-2:#55635F; --line:#D2DAD6;
+  --tag:#F2C230; --tag-ink:#1D1A0C; --primary:#173A34; --primary-ink:#F4FAF7; --focus:#2F6FB5;
+  --alta:#C8372D; --media:#C98207; --baixa:#5E7C99; --ok:#25885A; --andamento:#2F6FB5; --valid:#7B4FB8; --c1:#4F6B78;
+  --kv-ehv:#C23B3B; --kv-230:#2463A8; --kv-138:#1E8A5A; --kv-69:#8A4FB0; --kv-mt:#B0621B;
+  --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  --r:10px; --shadow:0 1px 2px rgba(10,20,18,.06),0 8px 24px rgba(10,20,18,.08);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1311; --surface:#151D1A; --surface-2:#1B2521; --ink:#E3EBE7; --ink-2:#97A7A1; --line:#2A3732;
+  --tag:#F2C230; --tag-ink:#1D1A0C; --primary:#CFE5DD; --primary-ink:#0D1311; --focus:#79AEEA;
+  --alta:#F0685C; --media:#EFAA3A; --baixa:#8EAAC6; --ok:#4CC488; --andamento:#6EA8E9; --valid:#B590EC; --c1:#8FA9B6;
+  --kv-ehv:#EF6E6E; --kv-230:#62A0E8; --kv-138:#4CC38F; --kv-69:#BC8FE2; --kv-mt:#E29C5E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1311; --surface:#151D1A; --surface-2:#1B2521; --ink:#E3EBE7; --ink-2:#97A7A1; --line:#2A3732;
+  --tag:#F2C230; --tag-ink:#1D1A0C; --primary:#CFE5DD; --primary-ink:#0D1311; --focus:#79AEEA;
+  --alta:#F0685C; --media:#EFAA3A; --baixa:#8EAAC6; --ok:#4CC488; --andamento:#6EA8E9; --valid:#B590EC; --c1:#8FA9B6;
+  --kv-ehv:#EF6E6E; --kv-230:#62A0E8; --kv-138:#4CC38F; --kv-69:#BC8FE2; --kv-mt:#E29C5E;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-disp);font-weight:600;letter-spacing:.01em;margin:0;text-wrap:balance}
+.mono{font-family:var(--f-mono)}
+.muted{color:var(--ink-2)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 0;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--f-disp);font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+.brand svg{flex:none}
+.top-r{margin-left:auto;display:flex;gap:8px;align-items:center;min-width:0}
+.tabs{order:3;width:100%;display:flex;gap:2px;overflow-x:auto;padding-bottom:8px}
+.tab{border:0;background:none;padding:7px 12px;border-radius:8px;font-family:var(--f-disp);font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.tab:hover{color:var(--ink);background:var(--surface-2)}
+.tab[aria-current="page"]{background:var(--ink);color:var(--surface)}
+.tab-sep{width:1px;background:var(--line);margin:6px 6px}
+.sel{appearance:none;background:var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23889' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 10px center;border:1px solid var(--line);border-radius:8px;padding:8px 30px 8px 10px;max-width:100%;min-width:0}
+.icon-btn{position:relative;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;width:38px;height:38px;display:grid;place-items:center;flex:none}
+.icon-btn svg{stroke:var(--ink);fill:none;stroke-width:1.8}
+.dot{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--alta);color:#fff;font:600 11px/18px var(--f-mono);text-align:center;padding:0 4px}
+.role{font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:6px;border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
+.role.r-admin{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.role.r-interno{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 50%,var(--line))}
+.role.r-externo{color:var(--andamento);border-color:color-mix(in srgb,var(--andamento) 50%,var(--line))}
+
+main{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 96px}
+.view{display:flex;flex-direction:column;gap:16px}
+.banner{border:1px solid var(--line);background:var(--surface);border-left:4px solid var(--tag);border-radius:8px;padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:10px}
+.banner h3{font-size:19px}
+
+/* bottom nav (phone) */
+.bnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.bnav button{flex:1;min-width:0;border:0;background:none;padding:8px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--f-disp);font-weight:600;font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.bnav button svg{stroke:currentColor;fill:none;stroke-width:1.8}
+.bnav button[aria-current="page"]{color:var(--ink)}
+.bnav button[aria-current="page"] svg{stroke:var(--ink);stroke-width:2.2}
+.fab{position:fixed;z-index:31;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;border:0;background:var(--tag);color:var(--tag-ink);font-family:var(--f-disp);font-weight:700;font-size:17px;letter-spacing:.05em;text-transform:uppercase;padding:13px 18px 13px 14px;border-radius:12px;box-shadow:0 2px 0 rgba(0,0,0,.18),var(--shadow)}
+.fab svg{stroke:var(--tag-ink);stroke-width:2.4}
+@media (max-width:759px){
+  .tabs{display:none}.bnav{display:flex}
+  .top-in{padding-block:10px}
+  .fab{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+  main{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+  .brand .full,.role .full{display:none}
+}
+
+/* buttons & chips */
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;justify-content:center}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.tagb{background:var(--tag);color:var(--tag-ink);border-color:var(--tag)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.bad{background:var(--alta);border-color:var(--alta);color:#fff}
+.btn.danger{color:var(--alta);border-color:color-mix(in srgb,var(--alta) 40%,var(--line))}
+.btn.armed{background:var(--alta);color:#fff;border-color:var(--alta)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.btn.sm{padding:6px 10px;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:5px;white-space:nowrap;border:1px solid transparent}
+.chip::before{content:"";width:7px;height:7px;border-radius:2px;background:currentColor}
+.c-alta{color:var(--alta);background:color-mix(in srgb,var(--alta) 12%,transparent)}
+.c-media{color:var(--media);background:color-mix(in srgb,var(--media) 14%,transparent)}
+.c-baixa{color:var(--baixa);background:color-mix(in srgb,var(--baixa) 14%,transparent)}
+.s-aberta{color:var(--ink);border-color:var(--line)}
+.s-aberta::before{background:var(--alta)}
+.s-andamento{color:var(--andamento);background:color-mix(in srgb,var(--andamento) 12%,transparent)}
+.s-validacao,.s-aguardando{color:var(--valid);background:color-mix(in srgb,var(--valid) 13%,transparent)}
+.s-sanada,.s-aprovado{color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.s-reprovado{color:var(--alta);background:color-mix(in srgb,var(--alta) 12%,transparent)}
+.s-vencida{color:var(--alta);border-color:var(--alta)}
+.s-vencida::before{display:none}
+.chip.tipo{color:var(--ink-2);border-color:var(--line)}
+.chip.tipo::before{display:none}
+
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel-h h2{font-size:19px;text-transform:uppercase;letter-spacing:.05em}
+.panel-b{padding:14px 16px}
+.eyebrow{font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+
+/* unifilar */
+.uhead{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+.uhead h1{font-size:30px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em}
+.stats{display:flex;gap:18px;flex-wrap:wrap}
+.stat b{display:block;font-family:var(--f-disp);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+.stat.alta b{color:var(--alta)}.stat.ok b{color:var(--ok)}.stat.val b{color:var(--valid)}
+.uwrap{overflow:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border-radius:0 0 var(--r) var(--r);
+  background-image:linear-gradient(var(--surface-2) 1px,transparent 1px),linear-gradient(90deg,var(--surface-2) 1px,transparent 1px);background-size:24px 24px}
+.u{display:block}
+.u .ln{fill:none;stroke:var(--c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.u .fl{fill:var(--surface);stroke:var(--c);stroke-width:2}
+.u .node{fill:var(--c)}
+.u .bar{stroke:var(--c);stroke-width:5;stroke-linecap:round}
+.u .bart{stroke:var(--c);stroke-width:3;stroke-dasharray:10 5}
+.u .kv{font:700 21px var(--f-disp);fill:var(--c);letter-spacing:.02em}
+.u .kvs{font:500 10px var(--f-mono);fill:var(--ink-2)}
+.u .code{font:500 10px var(--f-mono);fill:var(--ink-2)}
+.u .tagt{font:500 9.5px var(--f-mono);fill:var(--ink)}
+.u .bayn{font:500 11px var(--f-mono);fill:var(--ink)}
+.u .bayt{font:600 11px var(--f-disp);fill:var(--ink-2);letter-spacing:.08em;text-transform:uppercase}
+.u .bayc{font:600 12px var(--f-disp);letter-spacing:.04em}
+.u .sep{stroke:var(--line);stroke-dasharray:3 4}
+.u .empty{font:400 12px var(--f-body);fill:var(--ink-2)}
+.u .halo{opacity:.2}
+.u .selr{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:4 3}
+.u .badge text{font:600 10.5px var(--f-mono);fill:#fff}
+.u .f-alta{fill:var(--alta)}.u .f-media{fill:var(--media)}.u .f-baixa{fill:var(--baixa)}
+.u .t-alta{fill:var(--alta)}.u .t-media{fill:var(--media)}.u .t-baixa{fill:var(--baixa)}
+.u .tm{stroke:var(--surface);stroke-width:1.5}
+.u .tm-ok{fill:var(--ok)}.u .tm-rep{fill:var(--alta)}.u .tm-ag{fill:var(--valid)}
+.u .hitr{fill:transparent}
+.u .hit{cursor:pointer}
+.u .hit:hover .hitr{fill:color-mix(in srgb,var(--c) 10%,transparent)}
+.u .hit:focus{outline:none}
+.u .hit:focus-visible .hitr{stroke:var(--focus);stroke-width:2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--ink-2);align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend .lsep{width:1px;height:14px;background:var(--line)}
+.zoom{display:flex;gap:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tile{position:relative;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:10px 12px;min-height:58px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.tile:hover{border-color:var(--ink-2)}
+.tile .tn{font-weight:500;font-size:14px;line-height:1.2}
+.tile .tc{font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.tile.has{border-left:4px solid var(--pc)}
+.tile.has .tc{color:var(--pc)}
+.tile.sel{outline:2px dashed var(--ink);outline-offset:1px}
+.lvls{display:flex;flex-wrap:wrap;gap:8px}
+.lv{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1.5px solid var(--c);background:var(--surface);color:var(--c);border-radius:9px;padding:7px 14px 6px;font-family:var(--f-disp);font-weight:700;font-size:18px;letter-spacing:.03em;line-height:1.1}
+.lv small{font-family:var(--f-mono);font-weight:500;font-size:10.5px;letter-spacing:0;opacity:.85}
+.lv[aria-pressed="true"]{background:var(--c);color:var(--surface)}
+
+/* system views */
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:12px}
+.scard{position:relative;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px;min-height:118px}
+.scard:hover{border-color:var(--ink-2)}
+.scard.has{border-left:5px solid var(--pc)}
+.scard-n{font-family:var(--f-disp);font-weight:600;font-size:20px;line-height:1.1}
+.scard-m{font-size:14px;font-weight:600}
+.scard-t{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--ink-2);margin-top:auto;border-top:1px dashed var(--line);padding-top:8px}
+.tbar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--surface-2);flex:1 1 60px;min-width:60px}
+.tbar span{display:block;height:100%}
+.ocards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:10px}
+.ocard{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:start;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);padding:10px;width:100%}
+.ocard:hover{border-color:var(--ink-2)}
+.ocard .pt{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stp{display:flex;gap:3px;margin:6px 0 4px;width:100%}
+.stp i{flex:1;height:6px;border-radius:2px;background:var(--line)}
+.stp.big i{height:10px;border-radius:3px}
+.ost{display:block;font-family:var(--f-disp);font-weight:600;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.etl{display:flex;flex-direction:column;gap:6px}
+.etl input{position:absolute;opacity:0;pointer-events:none}
+.etl label{flex-direction:row;align-items:center;gap:12px;border:1px solid var(--line);border-radius:9px;padding:9px 12px;color:var(--ink);cursor:pointer;font-weight:600;font-size:15px;letter-spacing:0}
+.etl b{font-family:var(--f-mono);flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-size:12px;border:1px solid var(--line)}
+.etl small{display:block;font-weight:400;color:var(--ink-2);font-size:12.5px}
+.etl input:checked+label{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.etl input:checked+label b{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.etl input:focus-visible+label{outline:2px solid var(--focus);outline-offset:2px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:8px}
+.secards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.secard{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.secard:hover{border-color:var(--ink-2)}
+.secard .sg{font-family:var(--f-mono);font-size:12px;color:var(--ink-2)}
+.secard h3{font-size:22px}
+.empty-st{display:flex;flex-direction:column;gap:12px;align-items:flex-start;max-width:70ch}
+.empty-st h2{font-size:26px}
+
+/* list */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface);max-width:100%;overflow-x:auto}
+.seg button{border:0;background:none;padding:8px 12px;font-weight:600;font-size:14px;color:var(--ink-2);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg.big button{font-family:var(--f-disp);font-size:17px;letter-spacing:.05em;text-transform:uppercase;padding:8px 16px}
+.search{flex:1 1 200px;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 12px}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:56px minmax(0,1fr) 92px 150px 104px;gap:14px;align-items:center;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:10px 16px;width:100%}
+.row:hover{background:var(--surface-2)}
+.row:last-child{border-bottom:0}
+.thumb{width:56px;height:56px;border-radius:7px;background:var(--surface-2);overflow:hidden;display:grid;place-items:center;border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb svg{stroke:var(--ink-2);fill:none;stroke-width:1.5;opacity:.6}
+.row-t{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-l{font-size:13px;color:var(--ink-2);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-l .mono{font-size:12px}
+.row-d{font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rowh{display:grid;grid-template-columns:56px minmax(0,1fr) 92px 150px 104px;gap:14px;padding:8px 16px;border-bottom:1px solid var(--line)}
+@media (max-width:759px){
+  .rowh{display:none}
+  .row{grid-template-columns:56px minmax(0,1fr);gap:4px 12px}
+  .row .thumb{grid-row:span 3}
+  .row-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+}
+@media (min-width:760px){.row-meta{display:contents}}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-disp);font-weight:600;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--ink-2);font-size:13px}
+.kpi.k-alta b{color:var(--alta)}.kpi.k-ok b{color:var(--ok)}.kpi.k-val b{color:var(--valid)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.hb{display:flex;flex-direction:column;gap:8px}
+.hb-r{display:grid;grid-template-columns:minmax(0,9.5rem) minmax(0,1fr) 2.5rem;gap:10px;align-items:center;font-size:14px}
+.hb-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-t{height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.hb-f{display:block;height:100%;border-radius:3px}
+.hb-v{text-align:right;font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.stack{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--surface-2)}
+.stack span{display:block;height:100%}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin-top:10px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chart text{font:500 10.5px var(--f-mono);fill:var(--ink-2)}
+.chart .grid{stroke:var(--line)}
+.olds{width:100%;border-collapse:collapse;font-size:14px}
+.olds td,.olds th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.olds th{font-family:var(--f-disp);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;color:var(--ink-2)}
+.olds tr:last-child td{border-bottom:0}
+.lnk{border:0;background:none;padding:0;text-align:left;font-weight:600;color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.tscroll{overflow-x:auto}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:50}
+.sheet-bg{position:absolute;inset:0;background:rgba(8,14,12,.45)}
+.sheet-p{position:absolute;right:0;top:0;bottom:0;width:min(500px,100%);background:var(--surface);display:flex;flex-direction:column;box-shadow:var(--shadow);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (max-width:759px){
+  .sheet-p{top:auto;left:0;width:100%;max-height:calc(100% - 28px - env(safe-area-inset-top,0px));border-radius:16px 16px 0 0;padding-top:0;padding-left:env(safe-area-inset-left,0px)}
+}
+.sheet-h{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.sheet-h h2{font-size:20px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
+.sheet-b{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px;-webkit-overflow-scrolling:touch}
+
+/* forms */
+.form{display:flex;flex-direction:column;gap:14px}
+.form label,.fld{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--ink-2);letter-spacing:.02em}
+.form input,.form select,.form textarea{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:10px 11px;font-size:15px;font-weight:400;color:var(--ink);min-width:0;width:100%}
+.form textarea{resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+.pp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pp.two{grid-template-columns:repeat(2,1fr)}
+.pp input{position:absolute;opacity:0;pointer-events:none}
+.pp label{flex-direction:row;justify-content:center;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px 6px;font-family:var(--f-disp);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);cursor:pointer;position:relative;text-align:center}
+.pp label i{width:9px;height:9px;border-radius:2px;flex:none}
+.pp input:checked+label{border-color:var(--ink);background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--ink)}
+.pp input:focus-visible+label{outline:2px solid var(--focus);outline-offset:2px}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.ph{position:relative;aspect-ratio:1;max-width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button.rm{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1}
+.ph.zoomable{cursor:zoom-in}
+.ph.broken::after{content:"Foto indisponível";position:absolute;inset:0;display:grid;place-items:center;font-size:11px;color:var(--ink-2);text-align:center;padding:6px}
+.pick{display:flex;gap:8px;flex-wrap:wrap}
+.pick label{flex-direction:row;align-items:center;gap:7px;border:1px dashed var(--ink-2);border-radius:9px;padding:10px 14px;color:var(--ink);font-size:14px;cursor:pointer}
+.pick input{position:absolute;opacity:0;width:1px;height:1px}
+.pick svg{stroke:var(--ink);fill:none;stroke-width:1.8}
+.ferr{color:var(--alta);font-size:14px;margin:0}
+.ferr:empty{display:none}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions .btn{flex:1 1 auto}
+.callout{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+fieldset.setor{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:9px;padding:12px;margin:0;display:flex;flex-direction:column;gap:10px}
+fieldset.setor legend{font-family:var(--f-disp);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--c);padding:0 6px}
+.vao{display:grid;grid-template-columns:minmax(0,10.5rem) minmax(0,1fr) 36px 36px 36px;gap:6px;align-items:center}
+.vao button svg{stroke:var(--ink);fill:none;stroke-width:1.8}
+.form label.chkl,.chkl{flex-direction:row;align-items:center;gap:10px;font-size:15px;font-weight:500;color:var(--ink);letter-spacing:0;cursor:pointer}
+.form input[type="checkbox"]{width:20px;height:20px;flex:none;padding:0;accent-color:var(--primary)}
+.chkl-list{display:flex;flex-direction:column;gap:8px}
+.polos{display:flex;flex-direction:column;gap:6px}
+.polo{display:grid;grid-template-columns:30px minmax(0,1fr) minmax(0,9.5rem);gap:8px;align-items:center}
+.polo b{font-family:var(--f-mono);text-align:center;font-size:14px}
+.plan summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;gap:8px;flex-wrap:wrap}
+.plan summary::-webkit-details-marker{display:none}
+.plan summary .sec-t::before{content:"▸ ";display:inline-block}
+.plan[open] summary .sec-t::before{content:"▾ "}
+.plan-l{display:flex;flex-direction:column;margin-top:8px;border:1px solid var(--line);border-radius:9px}
+.plan-r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;border-bottom:1px solid var(--line);font-size:14px}
+.plan-r:last-child{border-bottom:0}
+button.chip{cursor:pointer}
+a.btn{text-decoration:none;color:inherit}
+.rfiles{display:flex;flex-direction:column;gap:6px}
+.rfile{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);flex-wrap:wrap}
+.rf-n{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 140px}
+.rf-n b{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);margin-right:6px}
+.vao button{height:40px;border:1px solid var(--line);background:var(--surface);border-radius:8px}
+@media (max-width:440px){.vao{grid-template-columns:minmax(0,1fr) 36px 36px 36px}.vao select{grid-column:1/-1}}
+.dangerzone{border-top:1px solid var(--line);padding-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.hint{margin:0;font-size:13px;font-weight:400;color:var(--ink-2)}
+
+/* detail */
+.dl{display:grid;grid-template-columns:7.5rem minmax(0,1fr);gap:7px 12px;font-size:14px;margin:0}
+.dl dt{color:var(--ink-2)}
+.dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.det-h{display:flex;flex-direction:column;gap:8px}
+.det-h h3{font-size:24px;line-height:1.1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.desc{white-space:pre-wrap;font-size:15px;margin:0;overflow-wrap:anywhere}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.box.okb{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 6%,var(--surface))}
+.box.valb{border-color:color-mix(in srgb,var(--valid) 45%,var(--line));background:color-mix(in srgb,var(--valid) 6%,var(--surface))}
+.box.badb{border-color:color-mix(in srgb,var(--alta) 45%,var(--line));background:color-mix(in srgb,var(--alta) 6%,var(--surface))}
+.box h4,.sec-t{margin:0;font-family:var(--f-disp);font-weight:600;font-size:15px;letter-spacing:.08em;text-transform:uppercase}
+.okb h4{color:var(--ok)}.valb h4{color:var(--valid)}.badb h4{color:var(--alta)}
+.sec-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pcards{display:flex;flex-direction:column;gap:8px}
+.pcard{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:8px;width:100%}
+.pcard.nt{grid-template-columns:minmax(0,1fr) auto}
+.pcard:hover{background:var(--surface-2)}
+.pcard .pt{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard .pm{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center}
+.crumb{font-family:var(--f-mono);font-size:12px;color:var(--ink-2)}
+
+/* lightbox, toast */
+.lb{position:fixed;inset:0;z-index:60;background:rgba(5,8,7,.92);display:grid;place-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lb img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.lb button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:20px}
+.toast{position:fixed;z-index:70;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:9px;font-weight:500;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+@media (max-width:759px){.toast{bottom:calc(140px + env(safe-area-inset-bottom,0px))}}
+.loading{color:var(--ink-2);padding:24px 16px}
+@media (prefers-reduced-motion:no-preference){.sheet-p{animation:slin .18s ease-out}@media (max-width:759px){.sheet-p{animation:slup .2s ease-out}}}
+@keyframes slin{from{transform:translateX(24px);opacity:.6}}
+@keyframes slup{from{transform:translateY(30px);opacity:.6}}
+/* formulário de ensaio (tela cheia, por cima do app) */
+.ens-ov{position:fixed;inset:0;z-index:55;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+.ens-top{display:flex;align-items:center;gap:10px;padding:8px max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.ens-tt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.ens-top h2{min-width:0;font-size:18px;text-transform:uppercase;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ens-st{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);white-space:nowrap}
+.ens-st.err{color:var(--alta)}
+.ens-top{flex-wrap:wrap}.ens-top .acts{display:flex;gap:6px;flex-wrap:wrap}
+.ens-fr{flex:1;width:100%;border:0;background:var(--bg)}
+.mlist{display:flex;flex-direction:column;gap:6px}
+.oem-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.oem-bar input[type=search]{flex:1 1 220px;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 10px;font:inherit;color:var(--ink)}
+.oem-seg{display:flex;gap:6px;flex-wrap:wrap}
+.oem-mes{display:flex;gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:baseline}
+.oem-mes:last-of-type{border-bottom:0}
+.oem-mes>b{min-width:150px;text-transform:capitalize}
+.linkb{border:0;background:none;padding:0;color:inherit;text-decoration:underline;text-underline-offset:2px;font:inherit;cursor:pointer}
+.oem-ev{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+.oem-ev summary{cursor:pointer;font-weight:600}
+.olds.ev{font-size:13px}.olds.ev td.n,.olds.ev th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.olds.ev td.bad{color:var(--alta);font-weight:700}
+.olds.ev td:first-child{min-width:150px}
+.spk{color:var(--ink-2);vertical-align:middle}
+.arm-m{display:flex;flex-direction:column;gap:5px}
+.arm-bar{height:10px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.arm-bar i{display:block;height:100%}
+.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.chk input{width:20px;height:20px;margin-top:2px;flex:none}
+.ft-r{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ft-r:last-child{border-bottom:0}.ft-n{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 220px}
+.ab-busca{display:flex;gap:8px;flex-wrap:wrap}
+.ab-busca input[type=search]{flex:1 1 260px;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 12px;font:inherit;font-size:17px;color:var(--ink)}
+.ab-busca .sel{flex:0 1 240px}
+.ab-canc{opacity:.6}
+.role.r-projetista{color:var(--valid);border-color:color-mix(in srgb,var(--valid) 50%,var(--line))}
+.r-proj [data-act="view"]:not([data-v="asbuilt"]),.r-proj [data-act="mais"]{display:none!important}
+@media (max-width:460px){.bnav button{font-size:10px;letter-spacing:0;text-transform:none;padding-left:1px;padding-right:1px;overflow:hidden}.bnav button svg{width:20px;height:20px}}
+.sem-r{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.sem-r.big{justify-content:flex-start;margin:6px 0 4px}
+.sem-d{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.04em;white-space:nowrap}
+.sem-d i{width:13px;height:13px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 25%,transparent)}
+.form label.chk{flex-direction:row;align-items:flex-start;gap:10px;font-size:14px;font-weight:500;color:var(--ink);letter-spacing:0}.req-terms{display:flex;flex-wrap:wrap;gap:4px 22px}.req-terms .chk{border:0}
+.req-sel{display:grid}.req-sel .chk{align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line)}.req-sel .chk input{margin-top:3px}
+.req-r{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.req-c{width:12px;height:12px;border-radius:50%;background:var(--c)}.req-t{display:flex;flex-direction:column;gap:2px;min-width:0}.req-t .linkb{align-self:flex-start;font-size:13px}
+.en-n{width:72px;border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit;background:var(--surface);color:var(--ink)}
+.chkl-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:4px 12px}
+.pt-l{display:flex;flex-direction:column}.pt-r{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}.pt-t{display:flex;flex-direction:column;min-width:0}
+.sp-rb{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;flex:none}
+.sp-b{border:0;border-right:1px solid var(--line);background:var(--surface);padding:6px 10px;font-family:var(--f-disp);font-weight:600;font-size:13px;color:var(--ink-2);cursor:pointer;min-height:32px}
+.sp-b:last-child{border-right:0}.sp-b.on{color:#fff;background:var(--ink-2)}.sp-b.on.v-OK{background:var(--ok)}.sp-b.on.v-NOK{background:var(--alta)}
+ul.hist{margin:0;padding-left:18px;font-size:13px;color:var(--ink-2)}
+.mais-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mgrp{font-family:var(--f-disp);font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin-top:6px}
+button.role{background:var(--surface);cursor:pointer}
+[hidden]{display:none!important}
+html,body{margin:0}
+img{max-width:100%}
+html{-webkit-text-size-adjust:100%}
+
+/* ===== SIGA ===== */
+.dgrid .panel{min-width:0}
+.secard .chips{margin-top:auto}
+.plan-r .role{flex:none}
+@media (max-width:759px){.nav1 .bnav{display:none}.nav1 main{padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}.nav1 .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))}}
+.fld .search,.fld .sel{flex:none;width:100%}
+
+</style>
+</head><body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="2" y="7" width="11" height="16" rx="2" fill="var(--tag)"/><rect x="17" y="7" width="11" height="16" rx="2" fill="none" stroke="var(--ink)" stroke-width="2.2"/><path d="M13 15h4" stroke="var(--ink)" stroke-width="2.6"/><circle cx="15" cy="15" r="2.4" fill="var(--ink)"/></svg>
+      <span>SIGA<span class="full"> · Gestão de Acessantes</span></span>
+    </div>
+    <div class="top-r">
+      <button id="instBtn" class="role" type="button" hidden>Instalar app</button><span id="syncChip" class="role" role="status" hidden></span><button id="roleChip" class="role" data-act="role" title="Sair" hidden></button>
+      <select id="acSel" class="sel" aria-label="Projeto de acesso" hidden><option value="">Todos os acessos</option></select>
+      <button class="icon-btn" id="adminBtn" data-act="admin" aria-label="Administração" title="Cadastros e configuração" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 20V9m8 11V4m8 16v-8"/><path d="M2 9h4M10 8h4M18 12h4"/></svg>
+      </button>
+    </div>
+    <nav class="tabs" aria-label="Seções">
+      <button class="tab" data-act="view" data-v="acessos">Acessos</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<nav class="bnav" aria-label="Seções">
+  <button data-act="view" data-v="acessos"><svg width="22" height="22" viewBox="0 0 24 24"><rect x="2.5" y="6" width="8" height="12" rx="1.5"/><rect x="13.5" y="6" width="8" height="12" rx="1.5"/><path d="M10.5 12h3"/></svg>Acessos</button>
+  <button data-act="admin" data-v="admin" id="bAdmin" hidden><svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 20V9m8 11V4m8 16v-8"/><path d="M2 9h4M10 8h4M18 12h4"/></svg>Cadastros</button>
+</nav>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-bg" data-act="sheet-close"></div>
+  <section class="sheet-p" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-h">
+      <button class="icon-btn" id="sheetBack" data-act="sheet-back" aria-label="Voltar" hidden><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2 id="sheetTitle"></h2>
+      <button class="icon-btn" data-act="sheet-close" aria-label="Fechar"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sheet-b" id="sheetBody"></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/* =====================================================================
+   SIGA — Sistema de Gestão de Acessantes
+   Base: catálogo do unifilar, estado, utilidades e perfis
+   (unifilar, PDF, formulários de teste por FT e camada de dados vêm do SGC)
+   ===================================================================== */
+
+/* ================= catálogo do unifilar ================= */
+const TIPOS = {
+  LT:{nome:'Linha de transmissão',curto:'Linha'},
+  TR:{nome:'Transformador / autotrafo',curto:'Transformador'},
+  ET:{nome:'Entrada de transformador',curto:'Entrada TR'},
+  RE:{nome:'Reator',curto:'Reator'},
+  BC:{nome:'Banco de capacitores',curto:'Banco capacitor'},
+  AL:{nome:'Alimentador',curto:'Alimentador'},
+  IB:{nome:'Interligação / transferência',curto:'Interligação'},
+};
+const ARR = {BS:'Barra simples',BPT:'Barra principal e transferência',BD4:'Barra dupla a 4 chaves',DJM:'Disjuntor e meio'};
+const ARR_CURTO = {BS:'BS',BPT:'BP + BT',BD4:'BD 4 ch.',DJM:'DJ e meio'};
+const KVS = ['500','230','138','69'];
+const ARR_DEF = kv=>{const n=parseFloat(String(kv).replace(',','.'))||0;return n>=440?'DJM':n>=230?'BD4':n>=69?'BPT':'BS'};
+const arrOf = st=>ARR[st.arranjo]?st.arranjo:(Number(st.barras)===2?'BD4':'BS');
+const SAIDA = {LT:['89L','57','TPC','PR','SAI'],TR:['89T','PR','TRF'],ET:['89T','ENT'],RE:['89R','PR','REA'],BC:['89S','BCP'],AL:['89L','PR','SAI'],IB:[]};
+const DJM_CHAIN=new Set(['89B','52','89D','TC','89C1','52C','89C2']);
+const TERM=new Set(['SAI','ENT','TRF','REA','BCP']);
+function baseList(st,v,idx){
+  const a=arrOf(st),t=TIPOS[v.tipo]?v.tipo:'LT',sd=SAIDA[t];
+  if(a==='DJM')return ['89B','52','89D','TC',...(idx%2===0?['89C1','52C','89C2']:[]),...sd];
+  if(t==='IB')return a==='BD4'?['89B1','52','TC','89B2']:a==='BPT'?['89B','52','TC','89BT']:['89B','52','TC'];
+  if(a==='BD4')return ['89B1','89B2','52','TC',sd[0],'89BP',...sd.slice(1)];
+  if(a==='BPT')return ['89B','52','TC',sd[0],'89TR',...sd.slice(1)];
+  return ['89B','52','TC',...sd];
+}
+const hideable=(st,k)=>arrOf(st)==='DJM'?!DJM_CHAIN.has(k):!['89B1','89B2'].includes(k);
+function eqList(st,v,idx){
+  const hid=new Set(v.ocultos||[]);let ks=baseList(st,v,idx).filter(k=>!hid.has(k)||!hideable(st,k));
+  const ex=(v.extras||[]).map(x=>'x'+x.id);
+  if(ex.length){const term=ks.length&&TERM.has(ks[ks.length-1])?ks.length-1:ks.length;ks=[...ks.slice(0,term),...ex,...ks.slice(term)]}
+  return ks;
+}
+const EXTRA = {
+  TP:{n:'TP / TPC',c:'TP',s:'tp',side:1},
+  PR:{n:'Para-raios',c:'PR',s:'pr',side:1},
+  '57':{n:'Chave de aterramento',c:'57',s:'gs',side:1},
+  TC:{n:'Transformador de corrente',c:'TC',s:'tc'},
+  '89':{n:'Secionadora',c:'89',s:'sec'},
+  '52':{n:'Disjuntor',c:'52',s:'dj'},
+  BB:{n:'Bobina de bloqueio',c:'BB',s:'bb'},
+  MF:{n:'Medição de faturamento (SMF)',c:'SMF',s:'mf',side:1},
+};
+function eqDef(v,k){if(k&&k[0]==='x'){const x=(v.extras||[]).find(e=>'x'+e.id===k),b=EXTRA[x?.t]||EXTRA.TP;return {...b,n:x?.nome||b.n}}return EQ[k]}
+const POLO_ATTR=new Set(['dj','sec','gs','tr','re']);
+const polOf=(ac,lk)=>(ac&&ac.polos&&ac.polos[tk(lk)])||'tri';
+const isTrafo=s=>s==='tr'||s==='trl'||s==='re';
+const polosTxt=(s,p)=>isTrafo(s)?(p==='mono'?'Banco de monofásicos':'Trifásico'):(p==='mono'?'Monopolar (3 polos independentes)':'Tripolar');
+const polOpts=(s,cur)=>`<option value="tri"${cur!=='mono'?' selected':''}>${isTrafo(s)?'Trifásico':'Tripolar'}</option><option value="mono"${cur==='mono'?' selected':''}>${isTrafo(s)?'Banco de monofásicos':'Monopolar'}</option>`;
+const EQ = {
+  '89B':{n:'Secionadora de barra',c:'89',s:'sec'},
+  '89B1':{n:'Secionadora da barra 1',c:'89',s:'sec'},
+  '89B2':{n:'Secionadora da barra 2',c:'89',s:'sec'},
+  '89BT':{n:'Secionadora da barra de transferência',c:'89',s:'sec'},
+  '89BP':{n:'Secionadora de by-pass (para a barra 2)',c:'89',s:'sec'},
+  '89TR':{n:'Secionadora de transferência',c:'89',s:'sec'},
+  '89D':{n:'Secionadora do disjuntor',c:'89',s:'sec'},
+  '89C1':{n:'Secionadora do disjuntor central (lado 1)',c:'89',s:'sec'},
+  '89C2':{n:'Secionadora do disjuntor central (lado 2)',c:'89',s:'sec'},
+  '89L':{n:'Secionadora de linha',c:'89',s:'sec'},
+  '89T':{n:'Secionadora do transformador',c:'89',s:'sec'},
+  '89R':{n:'Secionadora do reator',c:'89',s:'sec'},
+  '89S':{n:'Secionadora de saída',c:'89',s:'sec'},
+  '52':{n:'Disjuntor',c:'52',s:'dj'},
+  '52C':{n:'Disjuntor central',c:'52',s:'dj'},
+  'TC':{n:'Transformador de corrente',c:'TC',s:'tc'},
+  '57':{n:'Chave de aterramento da linha',c:'57',s:'gs',side:1},
+  'TPC':{n:'TPC / TP',c:'TP',s:'tp',side:1},
+  'PR':{n:'Para-raios',c:'PR',s:'pr',side:1},
+  'SAI':{n:'Saída / terminal',c:'',s:'out'},
+  'ENT':{n:'Chegada do transformador',c:'',s:'in'},
+  'TRF':{n:'Transformador de potência',c:'TR',s:'tr'},
+  'REA':{n:'Reator',c:'RE',s:'re'},
+  'BCP':{n:'Banco de capacitores',c:'BC',s:'bc'},
+};
+const tk=lk=>String(lk).replace('|','~');
+const tagOf=(ac,lk)=>(ac&&ac.tags&&ac.tags[tk(lk)])||'';
+
+/* ================= catálogo do SIGA ================= */
+const ROLES = {admin:'Administrador',interno:'Interno',externo:'Externo'};
+const VIEWS = ['acessos','unifilar','projetos','pex','si','spcs','superv','reunioes','emails','painel'];
+const VIEW_N = {acessos:'Acessos',unifilar:'Unifilar',projetos:'Projetos',pex:'PEX',si:'SI',spcs:'SPCS',superv:'Supervisão',reunioes:'Reuniões',emails:'E-mails',painel:'Painel'};
+/* situação de documentos de projeto e PEX (combinadas com o Ricardo) */
+const DST = {aguardando:'Aguardando envio',enviado:'Revisão enviada',analise:'Em análise',aprovado:'Aprovado',aprovado_com:'Aprovado com comentários',reprovado:'Reprovado / devolvido',executada:'Executada',cancelado:'Cancelado / substituído'};
+const DST_CHIP = {aguardando:'tipo',enviado:'s-validacao',analise:'s-andamento',aprovado:'s-aprovado',aprovado_com:'s-aprovado',reprovado:'s-reprovado',executada:'s-aprovado',cancelado:'tipo'};
+const DST_FIM = new Set(['aprovado','aprovado_com','executada','cancelado']);
+const DISC = ['Elétrica — proteção e controle','Elétrica — eletromecânico','Civil','SPCS / supervisão','Telecomunicações','Medição de faturamento','Estudos','Outros'];
+const ACST = {andamento:'Em andamento',concluido:'Concluído',suspenso:'Suspenso'};
+
+/* ================= estado ================= */
+const S = {cfgApp:null,boot:true,db:null,assets:null,dl:null,me:null,
+  ses:[],agentes:[],users:[],contatos:{},acessos:[],projs:[],pexs:[],sis:[],tests:[],energ:[],reun:[],emails:[],
+  loaded:{},view:'acessos',acId:'',sel:null,zoom:1,stack:[],draft:null,W:null,Wid:null,modelLv:['230','69'],
+  fp:{st:'abertos',q:'',disc:'',ord:'prazo',sel:new Set()},fx:{st:'abertas',q:''},fs:{st:'abertas',q:''},fe:{q:'',ac:''},fr:{q:''}};
+try{const v=localStorage.getItem('siga.view');if(VIEWS.includes(v))S.view=v;S.acId=localStorage.getItem('siga.ac')||'';const z=parseFloat(localStorage.getItem('siga.zoom'));if(z)S.zoom=z}catch(e){}
+
+/* ================= utilidades ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,'0');
+const fmtD=ms=>{if(!ms)return '—';const d=new Date(ms);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`};
+const fmtDH=ms=>{if(!ms)return '—';const d=new Date(ms);return `${fmtD(ms)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const fmtISO=s=>{if(!s)return '—';const [y,m,d]=String(s).slice(0,10).split('-');return `${d}/${m}/${y}`};
+const isoDe=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const todayISO=()=>isoDe(Date.now());
+function kvVar(kv){const n=parseFloat(String(kv).replace(',','.'))||0;return n>=440?'var(--kv-ehv)':n>=230?'var(--kv-230)':n>=138?'var(--kv-138)':n>=69?'var(--kv-69)':'var(--kv-mt)'}
+function wrap(t,n){const w=String(t||'').split(/\s+/);const out=[];let cur='';for(const x of w){if((cur+' '+x).trim().length>n&&cur){out.push(cur);cur=x}else cur=(cur+' '+x).trim()}if(cur)out.push(cur);return out}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3600)}
+const img=id=>imgURL(id);
+const fileView=id=>'https://drive.google.com/file/d/'+encodeURIComponent(id)+'/view';
+const nrm=x=>String(x||'').trim().toLowerCase();
+const abNorm=s=>String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const limpaNome=x=>String(x||'').replace(/[\\/:*?"<>|#%]+/g,'-').replace(/\s+/g,' ').trim().slice(0,90)||'Sem nome';
+const slugN=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,50)||'arquivo';
+const novoId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const fmtMB=b=>{if(b==null||isNaN(b))return '—';b=+b;if(b>=1024**3)return (b/1024**3).toLocaleString('pt-BR',{maximumFractionDigits:2})+' GB';if(b>=1024**2)return (b/1024**2).toLocaleString('pt-BR',{maximumFractionDigits:1})+' MB';return Math.max(1,Math.round(b/1024))+' KB'};
+const cfgApp=()=>S.cfgApp||{};
+function errMsg(e){const c=e&&e.code;if(c==='server')return String(e.message||'').replace(/^(Error|Exception):\s*/,'')||'Não foi possível concluir.';if(c==='offline')return 'Sem conexão com a internet.';if(c==='too_large')return 'Arquivo grande demais (limite de 20 MB).';if(c==='auth')return 'Sessão expirada. Entre de novo.';return (e&&e.message)||'Não foi possível concluir. Verifique a conexão e tente de novo.'}
+
+/* ================= perfis ================= */
+const R={
+  owner:()=>!!(S.me&&S.me.isOwner),
+  myUser:()=>S.me&&S.me.id?S.users.find(u=>u.id===S.me.id):null,
+  role:()=>S.me?(S.me.isOwner?'admin':(S.me.tipo||null)):null,
+  canAct:()=>!!S.db&&!!R.role(),
+  interno:()=>['admin','interno'].includes(R.role()),
+  siCad:()=>R.owner()||!!(R.myUser()||{}).siCad,
+};
+function nameOf(id){if(!id)return '—';if(id==='gmail')return 'Script do Gmail';const u=S.users.find(x=>x.id===id);if(u)return u.nome;return S.me&&id===S.me.id?'Você':'Usuário'}
+
+/* ================= acessos ================= */
+const acById=id=>S.acessos.find(a=>a.id===id)||null;
+const seById=id=>S.ses.find(s=>s.id===id)||null;
+const agById=id=>S.agentes.find(a=>a.id===id)||null;
+function effAC(){if(S.acId&&acById(S.acId))return acById(S.acId);if(S.acessos.length===1)return S.acessos[0];return null}
+const inScope=x=>{const a=effAC();return !a||x.ac===a.id};
+const acNome=a=>a?(a.codigo?a.codigo+' · ':'')+(a.nome||'Acesso'):'—';
+const acCurto=a=>a?(a.codigo||a.nome||'Acesso'):'—';
+const acSE=a=>a&&seById(a.se);
+const acAgente=a=>a&&agById(a.agente);
+const participa=(a,uid)=>!!(a&&a.part&&a.part[uid]);
+
+/* ================= telas, cabeçalho, folhas laterais ================= */
+function setView(v){S.view=v;try{localStorage.setItem('siga.view',v)}catch(e){};renderView();window.scrollTo(0,0)}
+function renderNav(){document.querySelectorAll('[data-act="view"]').forEach(b=>{if(b.dataset.v===S.view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  const bm=$('#bMais');if(bm){const fora=!['acessos','projetos','pex','si','spcs'].includes(S.view);if(fora)bm.setAttribute('aria-current','page');else bm.removeAttribute('aria-current')}}
+function renderHeader(){
+  const sel=$('#acSel');
+  sel.innerHTML=`<option value="">Todos os acessos</option>`+S.acessos.map(a=>`<option value="${esc(a.id)}">${esc(acNome(a))}</option>`).join('');
+  const um=!R.owner()&&S.acessos.length===1;sel.value=acById(S.acId)?S.acId:(um?S.acessos[0].id:'');sel.hidden=!S.me||!S.acessos.length||um;
+  const r=R.role(),rc=$('#roleChip');rc.hidden=!r;if(r){rc.className='role r-'+r;rc.innerHTML=r==='admin'?'Admin<span class="full">istrador</span>':ROLES[r]}
+  const ab=$('#adminBtn');ab.hidden=!R.owner();const bA=$('#bAdmin');if(bA)bA.hidden=!R.owner();document.body.classList.toggle('nav1',!R.owner());ab.querySelector('.dot')?.remove();
+  const nc=R.owner()?S.emails.filter(e=>!e.ac).length:0;if(nc)ab.insertAdjacentHTML('beforeend',`<span class="dot">${nc}</span>`);
+}
+function accessBanner(){
+  if(S.needConfig)return `<div class="banner"><h3>Configuração pendente</h3><span>Preencha o arquivo <b class="mono">config.js</b> com o endereço e a chave do Supabase e o link do script do Drive (veja o guia de instalação).</span></div>`;
+  if(S.boot||R.role())return '';
+  if(S.needSetup)return `<form class="banner form" data-form="setup"><h3>Configuração inicial do SIGA</h3><span class="muted">Crie o administrador. Guarde o código: é com ele que você entra para cadastrar subestações, agentes, usuários e projetos de acesso. Depois você também pode entrar pelo e-mail.</span>
+    <div class="grid2"><label>Seu nome<input id="suNome" name="nome" required maxlength="80"></label><label>Código de acesso (mín. 6 caracteres)<input id="suCod" name="codigo" required minlength="6" maxlength="20" autocomplete="new-password"></label></div>
+    <label>Repita o código<input id="suCod2" name="codigo2" required maxlength="20" autocomplete="new-password"></label>
+    <p class="ferr"></p><div><button class="btn primary" type="submit">Criar administrador</button></div></form>`;
+  const L=S.lg;
+  return `<form class="banner form" data-form="login"><h3>Entrar no SIGA</h3>
+    <div class="seg" role="group" aria-label="Forma de entrar"><button type="button" data-act="lg-modo" data-k="cel" aria-pressed="${L.modo==='cel'}">Celular (código)</button><button type="button" data-act="lg-modo" data-k="mail" aria-pressed="${L.modo==='mail'}">E-mail</button></div>
+    ${L.modo==='cel'?`<span class="muted">Digite o código de acesso que o administrador enviou. Este aparelho fica conectado até você sair.</span>
+      <div class="grid2"><label>Código de acesso<input id="lgCod" name="codigo" required maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false"></label><div style="display:flex;align-items:end"><button class="btn primary" type="submit">Entrar</button></div></div>`
+    :L.etapa===1?`<span class="muted">Digite o e-mail que o administrador cadastrou. Você vai receber um código de 6 dígitos.</span>
+      <div class="grid2"><label>E-mail<input id="lgMail" type="email" required autocomplete="email" value="${esc(L.email||'')}"></label><div style="display:flex;align-items:end"><button class="btn primary" type="submit">Enviar código</button></div></div>`
+    :`<span class="muted">Enviamos um e-mail para <b>${esc(L.email)}</b>. Toque no link do e-mail ou, se ele trouxer um código de 6 dígitos, digite aqui. Confira também a caixa de spam.</span>
+      <div class="grid2"><label>Código do e-mail<input id="lgOtp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required></label><div style="display:flex;align-items:end;gap:8px"><button class="btn primary" type="submit">Entrar</button><button class="btn" type="button" data-act="lg-volta">Trocar e-mail</button></div></div>`}
+    <p class="ferr"></p></form>`;
+}
+function withPreserve(el,fn){
+  const vals={};el.querySelectorAll('input[id],textarea[id],select[id]').forEach(i=>{if(i.type!=='file'&&i.type!=='checkbox'&&i.type!=='radio')vals[i.id]=i.value});
+  const ae=document.activeElement,aid=ae&&el.contains(ae)?ae.id:null,ss=aid&&ae.selectionStart!=null?[ae.selectionStart,ae.selectionEnd]:null;
+  fn();
+  for(const id in vals){const i=document.getElementById(id);if(i&&el.contains(i)&&i.type!=='file'&&!i.dataset.fixo)i.value=vals[id]}
+  if(aid){const n=document.getElementById(aid);if(n){n.focus();if(ss&&n.setSelectionRange)try{n.setSelectionRange(ss[0],ss[1])}catch(e){}}}
+}
+const RENDER={};
+function renderView(){
+  renderNav();const m=$('#main');
+  withPreserve(m,()=>{
+    if(S.boot||(S.db&&!S.loaded.acessos&&S.me)){m.innerHTML=`<div class="loading">Carregando…</div>`;return}
+    if(!R.role()){m.innerHTML=`<div class="view">${accessBanner()}${S.needSetup||S.needConfig?'':`<section class="panel"><div class="panel-b empty-st"><span class="eyebrow">SIGA · Neoenergia Transmissão</span><h2>Sistema de Gestão de Acessantes</h2><p class="muted" style="margin:0">Projetos de acesso às subestações: documentos de projeto, PEX, SIs, testes de proteção, supervisão, reuniões e e-mails, com prazos e semáforo de liberação. Cada pessoa vê só os acessos em que foi indicada.</p></div></section>`}</div>`;return}
+    (RENDER[S.view]||RENDER.acessos)(m);
+  });
+}
+/* tela que precisa de um acesso escolhido */
+function acGate(m,what){
+  if(!S.acessos.length){
+    m.innerHTML=`<div class="view">${accessBanner()}<section class="panel"><div class="panel-b empty-st"><h2>${R.owner()?'Nenhum projeto de acesso cadastrado':'Você ainda não participa de nenhum projeto de acesso'}</h2><p class="muted" style="margin:0">${R.owner()?'Cadastre a subestação, o agente acessante e o projeto de acesso. Depois indique quem participa.':'O administrador precisa indicar você como participante de um projeto de acesso.'}</p>${R.owner()?`<button class="btn primary" data-act="ac-new">Cadastrar projeto de acesso</button>`:''}</div></section></div>`;return null}
+  const ac=effAC();
+  if(!ac){m.innerHTML=`<div class="view">${accessBanner()}<div><span class="eyebrow">Escolha o projeto de acesso para ver ${esc(what)}</span></div><div class="secards">${S.acessos.map(acCard).join('')}</div></div>`;return null}
+  return ac;
+}
+function acHead(ac,title,stats){
+  const se=acSE(ac),ag=acAgente(ac);
+  return `<div class="uhead"><div><span class="eyebrow mono">${esc(ac.codigo||'')}${ac.codigo?' · ':''}${esc(se?(se.sigla||se.nome):'SE')} · ${esc(ag?(ag.sigla||ag.nome):'agente')}</span><h1>${esc(title||ac.nome)}</h1>${title?`<span class="crumb">${esc(ac.nome)}</span>`:''}</div>
+    ${stats?`<div class="stats">${stats.map(s=>`<div class="stat${s.c?' '+s.c:''}"><b>${s.v}</b><span>${esc(s.l)}</span></div>`).join('')}</div>`:''}</div>`;
+}
+
+/* ================= folha lateral ================= */
+function pushSheet(fr){S.stack.push(fr);showSheet()}
+function showSheet(){
+  const top=S.stack[S.stack.length-1];
+  if(!top){$('#sheet').hidden=true;document.body.style.overflow='';if(S.sel){S.sel=null;if(S.view==='unifilar')renderView()}return}
+  $('#sheet').hidden=false;document.body.style.overflow='hidden';
+  $('#sheetTitle').textContent=typeof top.title==='function'?top.title():top.title;
+  $('#sheetBack').hidden=S.stack.length<2;
+  const b=$('#sheetBody');b.innerHTML=top.render();b.scrollTop=0;
+}
+function refreshLiveSheet(){const top=S.stack[S.stack.length-1];if(top&&top.live){const b=$('#sheetBody'),st=b.scrollTop;$('#sheetTitle').textContent=typeof top.title==='function'?top.title():top.title;withPreserve(b,()=>{b.innerHTML=top.render()});b.scrollTop=st}}
+function closeSheet(){S.stack=[];showSheet()}
+function backSheet(){S.stack.pop();showSheet()}
+function rerenderTop(){const b=$('#sheetBody'),st=b.scrollTop,top=S.stack[S.stack.length-1];if(top){b.innerHTML=top.render();b.scrollTop=st}}
+
+/* ================= arquivos (anexos no Drive) ================= */
+async function compress(file,max=1600,q=.82){
+  const url=URL.createObjectURL(file);
+  try{const im=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
+    const s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));const w=Math.round(im.naturalWidth*s),h=Math.round(im.naturalHeight*s);
+    const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+    const b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));return b||file;
+  }catch(e){return file}finally{URL.revokeObjectURL(url)}
+}
+const MIME_EXT={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',txt:'text/plain',csv:'text/csv',vtt:'text/vtt',eml:'message/rfc822',zip:'application/zip',dwg:'application/acad',msg:'application/vnd.ms-outlook'};
+const extDe=n=>(String(n||'').match(/\.([a-z0-9]{2,5})$/i)||[])[1]?.toLowerCase()||'';
+const ARQ_OK=/^(image\/(jpeg|png|webp)|application\/pdf|text\/(plain|csv|vtt)|application\/(msword|vnd\.ms-excel|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.[a-z.]+|zip|acad|vnd\.ms-outlook)|message\/rfc822)$/;
+/* sobe um arquivo para a pasta do acesso no Drive e devolve {id,nome,tipo,tam} */
+async function subirArquivo(f,pasta){
+  if(!f||!S.assets)return null;
+  let tipo=MIME_EXT[extDe(f.name)]||f.type||'application/octet-stream';
+  if(!ARQ_OK.test(tipo))throw Object.assign(new Error(`Formato não aceito (${f.name}). Envie PDF, imagem, Word, Excel, PowerPoint, texto, ZIP ou DWG.`),{code:'server'});
+  if(f.size>20*1024*1024)throw Object.assign(new Error(`${f.name}: maior que 20 MB.`),{code:'server'});
+  let b=f;if(/^image\/(jpeg|png|webp)$/.test(tipo)&&f.size>600*1024){b=await compress(f,2200,.84);tipo='image/jpeg'}
+  const nome=String(f.name||'arquivo').slice(0,120);
+  const r=await S.assets.upload(new File([b],nome,{type:tipo}),{type:tipo,pasta});
+  return {id:r.id,nome,tipo,tam:r.sizeBytes||f.size,em:Date.now(),por:S.me?.id||null};
+}
+async function subirVarios(files,pasta,status){const out=[];const l=[...(files||[])];for(let i=0;i<l.length;i++){if(status)status.textContent=`Enviando ${i+1} de ${l.length}…`;out.push(await subirArquivo(l[i],pasta))}return out.filter(Boolean)}
+const pastaAc=(ac,...p)=>{ac=typeof ac==='string'?acById(ac):ac;return [limpaNome(ac?((ac.codigo?ac.codigo+' - ':'')+(ac.nome||'Acesso')):'Sem acesso'),...p.map(limpaNome)]};
+const CLIP='<svg width="20" height="20" viewBox="0 0 24 24"><path d="M20 11l-8.5 8.5a5 5 0 0 1-7-7L13 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L14 7"/></svg>';
+const blobToData=b=>new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>res('');fr.readAsDataURL(b)});
+async function fetchAsset(id){const r=await API.call('api_file',id);const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:r.mime})}
+const tipoCurto=t=>/pdf/.test(t)?'PDF':/image/.test(t)?'IMG':/word|msword/.test(t)?'DOC':/sheet|excel|csv/.test(t)?'XLS':/presentation|powerpoint/.test(t)?'PPT':/zip/.test(t)?'ZIP':/acad/.test(t)?'DWG':/vtt|plain/.test(t)?'TXT':/rfc822|outlook/.test(t)?'EML':'ARQ';
+function arqsHTML(l,rm){
+  if(!l||!l.length)return '';
+  return `<div class="rfiles">${l.map(f=>`<div class="rfile"><span class="rf-n"><b>${tipoCurto(f.tipo)}</b>${f.rev!=null?`<b>R${esc(f.rev)}</b>`:''}${esc(f.nome)}</span><span class="actions" style="flex-wrap:nowrap"><a class="btn sm" href="${fileView(f.id)}" target="_blank" rel="noopener">Abrir</a><button class="btn sm" data-act="arq-dl" data-f="${esc(f.id)}" data-n="${esc(f.nome)}" data-t="${esc(f.tipo)}">Baixar</button>${rm?`<button class="btn sm danger" data-act="${rm.act}" data-id="${esc(rm.id)}" data-f="${esc(f.id)}" aria-label="Remover ${esc(f.nome)}">✕</button>`:''}</span></div>`).join('')}</div>`;
+}
+const pickArq=(id,label,multi,accept)=>`<div class="pick"><label for="${id}">${CLIP}${esc(label)}<input type="file" id="${id}"${multi?' multiple':''}${accept?` accept="${accept}"`:''} data-arqs="${id}"></label></div><div class="crumb" id="${id}L"></div>`;
+function arm(btn,label,fn){if(btn.dataset.armed){fn();return}btn.dataset.armed='1';btn.classList.add('armed');btn.dataset.orig=btn.textContent;btn.textContent=label;setTimeout(()=>{if(btn.isConnected&&btn.dataset.armed){delete btn.dataset.armed;btn.classList.remove('armed');btn.textContent=btn.dataset.orig}},4000)}
+async function dbDo(fn,okMsg){try{await fn();if(okMsg)toast(okMsg)}catch(e){toast(errMsg(e))}}
+const getV=id=>String(document.getElementById(id)?.value||'').trim();
+const histHTML=(l,lab)=>`<ul class="hist">${(l||[]).slice().reverse().map(e=>`<li>${fmtDH(e.em)} · <b>${esc(lab(e))}</b>${e.rev!=null&&e.rev!==''?' · rev. '+esc(e.rev):''}${e.prazo?` · prazo ${fmtISO(e.prazo)}`:''}${e.obs?' · '+esc(e.obs):''} · ${esc(nameOf(e.por))}</li>`).join('')}</ul>`;
+const TA='style="border:1px solid var(--line);border-radius:8px;padding:9px;background:var(--surface);color:var(--ink);font-weight:400"';
+
+/* ================= SIGA rev. 1 — fundação: acessos, cadastros e participação ================= */
+const AGT = {geracao:'Geração',consumidor:'Consumidor livre',distribuidora:'Distribuidora',transmissora:'Transmissora',outro:'Outro'};
+
+/* ---- dados na tela ---- */
+let _onData=0;
+function onData(){if(_onData)return;_onData=requestAnimationFrame(()=>{_onData=0;renderHeader();renderView();refreshLiveSheet()})}
+function sub(c,key,sort){S.db.collection(c).onSnapshot(snap=>{let a=snap.docs.map(d=>({id:d.id,...d.data()}));if(sort)a.sort(sort);S[key]=a;S.loaded[key]=true;onData()})}
+const usuarioById=id=>S.users.find(u=>u.id===id)||null;
+const partIds=ac=>Object.keys((ac&&ac.part)||{}).filter(id=>usuarioById(id)||R.owner());
+const acsDoUsuario=uid=>S.acessos.filter(a=>participa(a,uid));
+const cod6=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c;do{c='';for(let i=0;i<6;i++)c+=a[Math.floor(Math.random()*a.length)]}while(Object.values(S.contatos).some(x=>String(x.codigo||'').toUpperCase()===c));return c};
+function normC(c){c=String(c||'').trim().toLowerCase();if(c.includes('@'))return c;const d=c.replace(/\D/g,'');return d.slice(-9)}
+const roleChip=t=>`<span class="role r-${esc(t)}">${esc(ROLES[t]||t)}</span>`;
+
+/* ---- cartão do projeto de acesso ---- */
+function acCard(a){
+  const se=acSE(a),ag=acAgente(a),n=partIds(a).length;
+  return `<button class="secard" data-act="ac-open" data-id="${esc(a.id)}"><span class="sg">${esc(a.codigo||'sem código')} · ${esc(se?(se.sigla||se.nome):'SE não informada')}</span><h3>${esc(a.nome||'Projeto de acesso')}</h3>
+    <span class="muted">${esc(ag?ag.nome:'Agente não informado')}</span>
+    <span class="chips"><span class="chip ${a.status==='concluido'?'s-aprovado':a.status==='suspenso'?'s-reprovado':'s-andamento'}">${esc(ACST[a.status||'andamento'])}</span><span class="chip tipo">${n} participante${n===1?'':'s'}</span>${a.previsao?`<span class="chip tipo">Energização ${fmtISO(a.previsao)}</span>`:''}</span></button>`;
+}
+
+/* ---- tela inicial: projetos de acesso ---- */
+RENDER.acessos=m=>{
+  const ac=acById(S.acId)||(!R.owner()&&S.acessos.length===1?S.acessos[0]:null);
+  if(ac)return renderAcesso(m,ac);
+  if(!S.acessos.length){acGate(m,'');return}
+  const q=abNorm(S.fa?.q||'');
+  const l=S.acessos.filter(a=>!q||abNorm([a.codigo,a.nome,acSE(a)?.nome,acSE(a)?.sigla,acAgente(a)?.nome,acAgente(a)?.sigla].join(' ')).includes(q));
+  const porSE={};l.forEach(a=>{const k=a.se||'';(porSE[k]=porSE[k]||[]).push(a)});
+  const ks=Object.keys(porSE).sort((x,y)=>String(seById(x)?.nome||'~').localeCompare(String(seById(y)?.nome||'~'),'pt-BR'));
+  m.innerHTML=`<div class="view">${accessBanner()}
+    <div class="uhead"><div><span class="eyebrow">${R.owner()?'Todos os projetos de acesso':'Projetos de acesso em que você participa'}</span><h1>Acessos</h1></div>
+      <div class="stats"><div class="stat"><b>${S.acessos.length}</b><span>acessos</span></div><div class="stat"><b>${new Set(S.acessos.map(a=>a.se).filter(Boolean)).size}</b><span>subestações</span></div><div class="stat"><b>${new Set(S.acessos.map(a=>a.agente).filter(Boolean)).size}</b><span>acessantes</span></div></div></div>
+    <div class="filters"><input class="search" id="faQ" type="search" placeholder="Buscar por código, nome, subestação ou acessante" value="${esc(S.fa?.q||'')}" aria-label="Buscar acesso">${R.owner()?`<button class="btn primary" data-act="ac-new">Novo projeto de acesso</button>`:''}</div>
+    ${ks.map(k=>{const se=seById(k);return `<section class="view" style="gap:8px"><span class="eyebrow">${esc(se?`${se.nome}${se.sigla?' · '+se.sigla:''}`:'Subestação não informada')}</span><div class="secards">${porSE[k].map(acCard).join('')}</div></section>`}).join('')||`<p class="muted">Nenhum acesso encontrado para “${esc(S.fa.q)}”.</p>`}
+  </div>`;
+};
+
+/* ---- um projeto de acesso: resumo ---- */
+function renderAcesso(m,ac){
+  const se=acSE(ac),ag=acAgente(ac),ids=partIds(ac);
+  const us=ids.map(usuarioById).filter(Boolean);
+  const int=us.filter(u=>u.tipo!=='externo'),ext=us.filter(u=>u.tipo==='externo');
+  const pl=l=>l.length?`<div class="plan-l">${l.map(u=>`<div class="plan-r"><span><b>${esc(u.nome)}</b>${u.funcao?` <span class="muted">· ${esc(u.funcao)}</span>`:''}${u.tipo==='externo'&&u.agente&&u.agente!==ac.agente?` <span class="chip c-media">outro agente</span>`:''}</span>${roleChip(u.tipo)}</div>`).join('')}</div>`:'<p class="hint">Ninguém indicado.</p>';
+  m.innerHTML=`<div class="view">${accessBanner()}
+    ${S.acessos.length>1||R.owner()?`<div><button class="btn sm" data-act="ac-todos">← Todos os acessos</button></div>`:''}
+    ${acHead(ac,null,[{v:ids.length,l:'participantes'}])}
+    <div class="dgrid">
+      <section class="panel"><div class="panel-h"><h2>Dados do acesso</h2>${R.owner()?`<button class="btn sm" data-act="ac-edit" data-id="${esc(ac.id)}">Editar</button>`:''}</div><div class="panel-b">
+        <dl class="dl"><dt>Código</dt><dd class="mono">${esc(ac.codigo||'—')}</dd>
+        <dt>Subestação</dt><dd>${esc(se?`${se.nome}${se.sigla?' ('+se.sigla+')':''}`:'—')}${se&&se.regional?` · regional ${esc(se.regional)}`:''}</dd>
+        <dt>Acessante</dt><dd>${esc(ag?ag.nome:'—')}${ag&&ag.tipo?` · ${esc(AGT[ag.tipo]||ag.tipo)}`:''}</dd>
+        <dt>Situação</dt><dd>${esc(ACST[ac.status||'andamento'])}</dd>
+        <dt>Início</dt><dd>${fmtISO(ac.inicio)}</dd>
+        <dt>Energização prevista</dt><dd>${fmtISO(ac.previsao)}</dd>
+        ${ac.descricao?`<dt>Descrição</dt><dd class="desc">${esc(ac.descricao)}</dd>`:''}
+        ${R.interno()&&(ac.chaves||[]).length?`<dt>Palavras-chave dos e-mails</dt><dd>${(ac.chaves||[]).map(k=>`<span class="chip tipo">${esc(k)}</span>`).join(' ')}</dd>`:''}</dl>
+      </div></section>
+      <section class="panel"><div class="panel-h"><h2>Participantes</h2>${R.owner()?`<button class="btn sm" data-act="ac-part" data-id="${esc(ac.id)}">Indicar participantes</button>`:''}</div><div class="panel-b" style="display:flex;flex-direction:column;gap:12px">
+        <div><span class="eyebrow">Neoenergia</span>${pl(int)}</div><div><span class="eyebrow">Acessante</span>${pl(ext)}</div>
+        <p class="hint">Só quem está nesta lista vê este acesso, e isso vale também no banco de dados.</p>
+      </div></section>
+    </div>
+  </div>`;
+}
+
+/* ================= administração ================= */
+function openAdmin(){pushSheet({title:'Administração',live:true,render:()=>{
+  const nc=S.users.length,na=S.agentes.length,ns=S.ses.length,nx=S.acessos.length;
+  const it=(act,t,d,n)=>`<button class="pcard nt" data-act="${act}"><span style="min-width:0"><span class="pt">${t}</span><span class="crumb">${d}</span></span><span class="chip tipo">${n}</span></button>`;
+  return `<div class="pcards">
+    ${it('adm-acessos','Projetos de acesso','Cadastro, subestação, acessante e participantes',nx)}
+    ${it('adm-users','Usuários','Internos e externos, código de acesso e envio',nc)}
+    ${it('adm-agentes','Agentes acessantes','Empresas que acessam as subestações',na)}
+    ${it('adm-ses','Subestações','Nome, sigla e regional (usada na numeração da PEX)',ns)}
+  </div>
+  <div class="box"><h4>Armazenamento</h4><div id="usoBox"><button class="btn sm" data-act="adm-uso">Ver uso do banco e do Drive</button></div></div>`}})}
+
+/* ---- usuários ---- */
+function openUsers(){pushSheet({title:'Usuários',live:true,render:()=>{
+  const ags=S.agentes;
+  const linha=u=>{const c=S.contatos[u.id]||{},eu=S.me&&u.id===S.me.id,acs=acsDoUsuario(u.id);
+    return `<div class="box"><div class="sec-row"><span style="min-width:0"><b>${esc(u.nome)}</b>${eu?' <span class="muted">(você)</span>':''}<span class="crumb" style="display:block">${u.tipo==='admin'?'Vê todos os acessos':acs.length?acs.map(a=>esc(acCurto(a))).join(' · '):'Sem acesso indicado'}</span></span>${roleChip(u.tipo)}</div>
+      ${u.tipo==='admin'?'':`<div class="grid2"><label class="fld">Perfil<select class="sel" data-utipo="${esc(u.id)}"><option value="interno"${u.tipo==='interno'?' selected':''}>Interno (Neoenergia)</option><option value="externo"${u.tipo==='externo'?' selected':''}>Externo (acessante)</option></select></label>
+        ${u.tipo==='externo'?`<label class="fld">Agente<select class="sel" data-uag="${esc(u.id)}"><option value="">— escolha —</option>${ags.map(a=>`<option value="${esc(a.id)}"${u.agente===a.id?' selected':''}>${esc(a.sigla||a.nome)}</option>`).join('')}</select></label>`:`<label class="fld">Função<input class="search" data-ufun="${esc(u.id)}" value="${esc(u.funcao||'')}" placeholder="ex.: Eng. de proteção"></label>`}</div>`}
+      <div class="grid2"><label class="fld">Celular ou e-mail<input class="search" data-ucont="${esc(u.id)}" value="${esc(c.contato||'')}" placeholder="celular ou e-mail" aria-label="Contato de ${esc(u.nome)}"></label>
+        <div class="fld">Código de acesso<span class="mono" style="font-size:16px;color:var(--ink)">${esc(c.codigo||'—')}</span></div></div>
+      <div class="actions">${envioHTML(u,c)}<button class="btn sm" data-act="u-copy" data-c="${esc(c.codigo||'')}">Copiar código</button>${u.tipo==='admin'?'':`<button class="btn sm" data-act="u-cod" data-id="${esc(u.id)}">Gerar novo código</button><button class="btn sm danger" data-act="u-del" data-id="${esc(u.id)}">Remover</button>`}</div></div>`};
+  const g=(t,l)=>l.length?`<span class="mgrp">${t}</span>${l.map(linha).join('')}`:'';
+  return `<form class="form box" data-form="user"><span class="sec-t">Adicionar usuário</span>
+      <div class="grid2"><label>Nome<input name="nome" required maxlength="80"></label><label>Perfil<select name="tipo" id="nuTipo"><option value="interno">Interno (Neoenergia)</option><option value="externo">Externo (acessante)</option></select></label></div>
+      <div class="grid2"><label>Celular ou e-mail<input name="contato" maxlength="120" placeholder="(71) 99999-0000 ou nome@empresa.com"></label><label>Agente (se externo)<select name="agente"><option value="">—</option>${ags.map(a=>`<option value="${esc(a.id)}">${esc(a.sigla||a.nome)}</option>`).join('')}</select></label></div>
+      <p class="hint">O código de acesso é gerado na hora. A pessoa só vê os projetos de acesso em que você a indicar.</p>
+      <p class="ferr"></p><div><button class="btn primary" type="submit">Adicionar</button></div></form>
+    ${g('Administrador',S.users.filter(u=>u.tipo==='admin'))}${g('Internos',S.users.filter(u=>u.tipo==='interno'))}${g('Externos',S.users.filter(u=>u.tipo==='externo'))}`}})}
+
+/* ---- agentes acessantes ---- */
+function openAgentes(){pushSheet({title:'Agentes acessantes',live:true,render:()=>`<div class="actions"><button class="btn primary" data-act="ag-new">Novo agente</button></div>
+  ${S.agentes.length?`<div class="pcards">${S.agentes.map(a=>{const n=S.acessos.filter(x=>x.agente===a.id).length;return `<button class="pcard nt" data-act="ag-edit" data-id="${esc(a.id)}"><span style="min-width:0"><span class="pt">${esc(a.nome)}</span><span class="crumb">${esc([a.sigla,AGT[a.tipo],a.cnpj].filter(Boolean).join(' · ')||'—')}</span></span><span class="chip tipo">${n} acesso${n===1?'':'s'}</span></button>`}).join('')}</div>`:'<p class="hint">Nenhum agente cadastrado.</p>'}`})}
+function agForm(a){a=a||{};pushSheet({title:a.id?'Editar agente':'Novo agente',render:()=>`<form class="form" data-form="ag" data-id="${esc(a.id||'')}">
+  <label>Razão social / nome<input name="nome" required maxlength="120" value="${esc(a.nome||'')}"></label>
+  <div class="grid2"><label>Sigla<input name="sigla" maxlength="30" value="${esc(a.sigla||'')}"></label><label>Tipo<select name="tipo">${Object.entries(AGT).map(([k,v])=>`<option value="${k}"${a.tipo===k?' selected':''}>${v}</option>`).join('')}</select></label></div>
+  <div class="grid2"><label>CNPJ<input name="cnpj" maxlength="20" value="${esc(a.cnpj||'')}" inputmode="numeric"></label><label>Responsável / contato<input name="resp" maxlength="120" value="${esc(a.resp||'')}"></label></div>
+  <p class="ferr"></p><div class="actions"><button class="btn primary" type="submit">Salvar</button></div>
+  ${a.id?`<div class="dangerzone"><button class="btn sm danger" type="button" data-act="ag-del" data-id="${esc(a.id)}">Excluir agente</button><span>Só é possível excluir se nenhum acesso usar este agente.</span></div>`:''}</form>`})}
+
+/* ---- subestações ---- */
+function openSEs(){pushSheet({title:'Subestações',live:true,render:()=>`<div class="actions"><button class="btn primary" data-act="se-new">Nova subestação</button></div>
+  ${S.ses.length?`<div class="pcards">${S.ses.map(s=>{const n=S.acessos.filter(x=>x.se===s.id).length;return `<button class="pcard nt" data-act="se-edit" data-id="${esc(s.id)}"><span style="min-width:0"><span class="pt">${esc(s.nome)}</span><span class="crumb">${esc([s.sigla,s.regional&&'regional '+s.regional,s.tensoes].filter(Boolean).join(' · ')||'—')}</span></span><span class="chip tipo">${n} acesso${n===1?'':'s'}</span></button>`}).join('')}</div>`:'<p class="hint">Nenhuma subestação cadastrada.</p>'}`})}
+function seForm(s){s=s||{};pushSheet({title:s.id?'Editar subestação':'Nova subestação',render:()=>`<form class="form" data-form="se" data-id="${esc(s.id||'')}">
+  <label>Nome<input name="nome" required maxlength="120" value="${esc(s.nome||'')}" placeholder="SE Exemplo 500/230 kV"></label>
+  <div class="grid2"><label>Sigla<input name="sigla" required maxlength="12" value="${esc(s.sigla||'')}" placeholder="ex.: ITJ" style="text-transform:uppercase"></label><label>Regional<input name="regional" maxlength="8" value="${esc(s.regional||'')}" placeholder="ex.: NNE" style="text-transform:uppercase"></label></div>
+  <label>Tensões (kV)<input name="tensoes" maxlength="40" value="${esc(s.tensoes||'')}" placeholder="500/230/69"></label>
+  <p class="hint">A regional e a sigla entram no número da PEX: PEX-{REG}-SE-{SIGLA}-0001.</p>
+  <p class="ferr"></p><div class="actions"><button class="btn primary" type="submit">Salvar</button></div>
+  ${s.id?`<div class="dangerzone"><button class="btn sm danger" type="button" data-act="se-del" data-id="${esc(s.id)}">Excluir subestação</button><span>Só é possível excluir se nenhum acesso usar esta subestação.</span></div>`:''}</form>`})}
+
+/* ---- projetos de acesso ---- */
+function openAcessos(){pushSheet({title:'Projetos de acesso',live:true,render:()=>`<div class="actions"><button class="btn primary" data-act="ac-new">Novo projeto de acesso</button></div>
+  ${S.acessos.length?`<div class="pcards">${S.acessos.map(a=>{const n=partIds(a).length;return `<button class="pcard nt" data-act="ac-edit" data-id="${esc(a.id)}"><span style="min-width:0"><span class="pt">${esc(acNome(a))}</span><span class="crumb">${esc((acSE(a)?.sigla||acSE(a)?.nome||'SE?')+' · '+(acAgente(a)?.sigla||acAgente(a)?.nome||'agente?'))}</span></span><span class="chip tipo">${n} part.</span></button>`}).join('')}</div>`:'<p class="hint">Nenhum projeto de acesso cadastrado.</p>'}`})}
+function acForm(a){a=a||{};
+  if(!S.ses.length||!S.agentes.length){toast(!S.ses.length?'Cadastre primeiro a subestação.':'Cadastre primeiro o agente acessante.');return (!S.ses.length?seForm:agForm)()}
+  pushSheet({title:a.id?'Editar projeto de acesso':'Novo projeto de acesso',render:()=>`<form class="form" data-form="ac" data-id="${esc(a.id||'')}">
+  <div class="grid2"><label>Código<input name="codigo" maxlength="30" value="${esc(a.codigo||'')}" placeholder="ex.: CUST-2026-014"></label><label>Situação<select name="status">${Object.entries(ACST).map(([k,v])=>`<option value="${k}"${(a.status||'andamento')===k?' selected':''}>${v}</option>`).join('')}</select></label></div>
+  <label>Nome do acesso<input name="nome" required maxlength="140" value="${esc(a.nome||'')}" placeholder="ex.: Conexão UFV Sol Nascente — EL 230 kV"></label>
+  <div class="grid2"><label>Subestação (acessada)<select name="se" required><option value="">— escolha —</option>${S.ses.map(s=>`<option value="${esc(s.id)}"${a.se===s.id?' selected':''}>${esc(s.nome)}</option>`).join('')}</select></label>
+    <label>Agente acessante<select name="agente" required><option value="">— escolha —</option>${S.agentes.map(g=>`<option value="${esc(g.id)}"${a.agente===g.id?' selected':''}>${esc(g.nome)}</option>`).join('')}</select></label></div>
+  <div class="grid2"><label>Início<input type="date" name="inicio" value="${esc(a.inicio||'')}"></label><label>Energização prevista<input type="date" name="previsao" value="${esc(a.previsao||'')}"></label></div>
+  <label>Descrição<textarea name="descricao" rows="3" maxlength="2000">${esc(a.descricao||'')}</textarea></label>
+  <label>Palavras-chave dos e-mails<input name="chaves" maxlength="300" value="${esc((a.chaves||[]).join('; '))}" placeholder="ex.: Sol Nascente; CUST 014"></label>
+  <p class="hint">Separe por ponto e vírgula. Os e-mails com a caixa da gestão de acesso em cópia que tiverem o código ou uma destas palavras no assunto entram neste acesso.</p>
+  <p class="ferr"></p><div class="actions"><button class="btn primary" type="submit">Salvar</button>${a.id?`<button class="btn" type="button" data-act="ac-part" data-id="${esc(a.id)}">Participantes</button>`:''}</div>
+  ${a.id?`<div class="dangerzone"><button class="btn sm danger" type="button" data-act="ac-del" data-id="${esc(a.id)}">Excluir projeto de acesso</button><span>Os participantes deixam de ver este acesso.</span></div>`:''}</form>`})}
+function acPart(id){pushSheet({title:'Participantes',live:true,render:()=>{
+  const a=acById(id);if(!a)return '<p class="hint">Acesso não encontrado.</p>';
+  const p=a.part||{};
+  const linha=u=>`<label class="chk" style="padding:7px 0;border-bottom:1px solid var(--line)"><input type="checkbox" data-part="${esc(u.id)}" data-ac="${esc(a.id)}"${p[u.id]?' checked':''}><span style="min-width:0"><b>${esc(u.nome)}</b> ${roleChip(u.tipo)}${u.tipo==='externo'?` <span class="muted">· ${esc(agById(u.agente)?.sigla||agById(u.agente)?.nome||'sem agente')}</span>${u.agente&&u.agente!==a.agente?' <span class="chip c-media">outro agente</span>':''}`:''}${p[u.id]?`<span class="crumb" style="display:block">indicado em ${fmtD(p[u.id].em)} por ${esc(nameOf(p[u.id].por))}</span>`:''}</span></label>`;
+  const int=S.users.filter(u=>u.tipo==='interno'),ext=S.users.filter(u=>u.tipo==='externo').sort((x,y)=>(y.agente===a.agente)-(x.agente===a.agente));
+  return `<div class="det-h"><span class="crumb">${esc(acNome(a))}</span><p class="hint" style="margin:0">Marque quem participa deste acesso. Quem não estiver marcado não vê nada dele (o administrador vê tudo).</p></div>
+    <div class="box"><h4>Neoenergia (internos)</h4>${int.length?`<div class="req-sel">${int.map(linha).join('')}</div>`:'<p class="hint">Nenhum usuário interno cadastrado.</p>'}</div>
+    <div class="box"><h4>Acessante (externos)</h4>${ext.length?`<div class="req-sel">${ext.map(linha).join('')}</div>`:'<p class="hint">Nenhum usuário externo cadastrado.</p>'}</div>
+    <div class="actions"><button class="btn" data-act="adm-users">Cadastrar usuário</button></div>`}})}
+
+/* ---- uso do armazenamento ---- */
+async function verUso(){const el=$('#usoBox');if(!el)return;el.innerHTML='<p class="hint">Consultando…</p>';
+  try{const u=await API.call('api_uso');el.innerHTML=`<dl class="dl"><dt>Banco (projeto todo)</dt><dd>${fmtMB(u.banco)} de ${fmtMB(u.bancoLimite)}</dd><dt>Registros do SIGA</dt><dd>${u.docs??'—'}</dd><dt>Drive (conta)</dt><dd>${fmtMB(u.usado)} de ${fmtMB(u.limite)}</dd><dt>Pasta do SIGA</dt><dd>${fmtMB(u.app)} · ${u.arquivos} arquivo(s)${u.parcial?' (contagem parcial)':''}</dd></dl>`}
+  catch(e){el.innerHTML=`<p class="ferr">${esc(errMsg(e))}</p>`}}
+
+/* ================= ações ================= */
+const ACT={
+  view:b=>setView(b.dataset.v),
+  'sheet-close':()=>closeSheet(),'sheet-back':()=>backSheet(),
+  role:b=>arm(b,'Sair?',()=>logout()),
+  'lg-modo':b=>{S.lg.modo=b.dataset.k;S.lg.etapa=1;renderView()},
+  'lg-volta':()=>{S.lg.etapa=1;renderView()},
+  admin:()=>{if(R.owner()){S.stack=[];openAdmin()}},
+  'adm-users':()=>openUsers(),'adm-agentes':()=>openAgentes(),'adm-ses':()=>openSEs(),'adm-acessos':()=>openAcessos(),'adm-uso':()=>verUso(),
+  'ac-open':b=>{S.acId=b.dataset.id;try{localStorage.setItem('siga.ac',S.acId)}catch(e){}S.view='acessos';renderHeader();renderView();window.scrollTo(0,0)},
+  'ac-todos':()=>{S.acId='';try{localStorage.setItem('siga.ac','')}catch(e){}renderHeader();renderView()},
+  'ac-new':()=>acForm(),'ac-edit':b=>acForm(acById(b.dataset.id)),'ac-part':b=>acPart(b.dataset.id),
+  'ac-del':b=>arm(b,'Confirmar exclusão',()=>dbDo(async()=>{await S.db.doc('acessos/'+b.dataset.id).delete();if(S.acId===b.dataset.id)S.acId='';closeSheet()},'Projeto de acesso excluído')),
+  'ag-new':()=>agForm(),'ag-edit':b=>agForm(S.agentes.find(a=>a.id===b.dataset.id)),
+  'ag-del':b=>{const id=b.dataset.id;if(S.acessos.some(a=>a.agente===id)){toast('Há acesso usando este agente.');return}if(S.users.some(u=>u.agente===id)){toast('Há usuário externo ligado a este agente.');return}arm(b,'Confirmar exclusão',()=>dbDo(async()=>{await S.db.doc('agentes/'+id).delete();backSheet()},'Agente excluído'))},
+  'se-new':()=>seForm(),'se-edit':b=>seForm(seById(b.dataset.id)),
+  'se-del':b=>{const id=b.dataset.id;if(S.acessos.some(a=>a.se===id)){toast('Há acesso usando esta subestação.');return}arm(b,'Confirmar exclusão',()=>dbDo(async()=>{await S.db.doc('subestacoes/'+id).delete();backSheet()},'Subestação excluída'))},
+  'u-copy':b=>{const c=b.dataset.c;if(!c)return;(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Código copiado'),()=>toast('Código: '+c))},
+  'u-cod':b=>arm(b,'Gerar? O antigo deixa de valer',()=>dbDo(()=>S.db.doc('contatos/'+b.dataset.id).update({codigo:cod6()}),'Novo código gerado')),
+  'u-del':b=>arm(b,'Confirmar remoção',()=>dbDo(async()=>{const id=b.dataset.id;
+    const ops=S.acessos.filter(a=>participa(a,id)).map(a=>{const p={...(a.part||{})};delete p[id];return S.db.doc('acessos/'+a.id).set({...a,part:p,id:undefined})});
+    await Promise.all(ops);await S.db.doc('usuarios/'+id).delete();await S.db.doc('contatos/'+id).delete()},'Usuário removido')),
+  'arq-dl':async b=>{try{const bl=await fetchAsset(b.dataset.f);await S.dl.save({filename:b.dataset.n||'arquivo',data:bl})}catch(e){toast(errMsg(e))}},
+};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t||t.disabled)return;const f=ACT[t.dataset.act];if(f){e.preventDefault();f(t,e)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.stack.length){closeSheet()}});
+document.addEventListener('change',e=>{const t=e.target;if(!t)return;
+  if(t.id==='acSel'){S.acId=t.value;try{localStorage.setItem('siga.ac',S.acId)}catch(x){}S.view='acessos';renderView();return}
+  if(t.dataset.utipo){const ch={tipo:t.value};if(t.value==='interno')ch.agente='';dbDo(()=>S.db.doc('usuarios/'+t.dataset.utipo).update(ch),'Perfil atualizado');return}
+  if(t.dataset.uag!=null){dbDo(()=>S.db.doc('usuarios/'+t.dataset.uag).update({agente:t.value}),'Agente atualizado');return}
+  if(t.dataset.ucont!=null){dbDo(()=>S.db.doc('contatos/'+t.dataset.ucont).update({contato:t.value.trim()}),'Contato atualizado');return}
+  if(t.dataset.ufun!=null){dbDo(()=>S.db.doc('usuarios/'+t.dataset.ufun).update({funcao:t.value.trim()}),'Função atualizada');return}
+  if(t.dataset.part){const a=acById(t.dataset.ac);if(!a)return;const p={...(a.part||{})};
+    if(t.checked)p[t.dataset.part]={em:Date.now(),por:S.me.id};else delete p[t.dataset.part];
+    const {id,...dados}=a;dbDo(()=>S.db.doc('acessos/'+a.id).set({...dados,part:p}),t.checked?'Participante indicado':'Participante retirado');return}
+});
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.id==='faQ'){S.fa={q:t.value};clearTimeout(S.faT);S.faT=setTimeout(renderView,150)}});
+document.addEventListener('submit',async e=>{const f=e.target;if(!f||!f.dataset||!f.dataset.form)return;e.preventDefault();
+  const k=f.dataset.form,fd=new FormData(f),er=f.querySelector('.ferr'),bt=f.querySelector('button[type=submit]');if(er)er.textContent='';
+  const v=n=>String(fd.get(n)||'').trim();
+  if(k==='login')return doLogin(f);
+  if(k==='setup')return doSetup(f);
+  if(bt)bt.disabled=true;
+  try{
+    if(k==='user'){
+      const nome=v('nome'),tipo=v('tipo')==='externo'?'externo':'interno',ag=v('agente'),cont=v('contato');
+      if(!nome)throw erro('Informe o nome.');
+      if(tipo==='externo'&&!ag)throw erro('Escolha o agente do usuário externo.');
+      if(cont&&Object.values(S.contatos).some(c=>normC(c.contato)===normC(cont)))throw erro('Já existe usuário com este contato.');
+      const id=genId();
+      await S.db.doc('usuarios/'+id).set({nome,tipo,agente:tipo==='externo'?ag:'',uid:id,criadoEm:Date.now()});
+      await S.db.doc('contatos/'+id).set({contato:cont,codigo:cod6()});
+      f.reset();toast('Usuário adicionado. Envie o código pelo WhatsApp ou e-mail.');
+    }else if(k==='ag'){
+      const id=f.dataset.id||genId(),prev=S.agentes.find(a=>a.id===id)||{};const {id:_i,...p}=prev;
+      await S.db.doc('agentes/'+id).set({...p,nome:v('nome'),sigla:v('sigla'),tipo:v('tipo'),cnpj:v('cnpj'),resp:v('resp'),criadoEm:prev.criadoEm||Date.now()});
+      backSheet();toast('Agente salvo');
+    }else if(k==='se'){
+      const id=f.dataset.id||genId(),prev=seById(id)||{};const {id:_i,...p}=prev,sg=v('sigla').toUpperCase();
+      if(S.ses.some(s=>s.id!==id&&String(s.sigla||'').toUpperCase()===sg))throw erro('Já existe subestação com esta sigla.');
+      await S.db.doc('subestacoes/'+id).set({...p,nome:v('nome'),sigla:sg,regional:v('regional').toUpperCase(),tensoes:v('tensoes'),criadoEm:prev.criadoEm||Date.now()});
+      backSheet();toast('Subestação salva');
+    }else if(k==='ac'){
+      const id=f.dataset.id||genId(),prev=acById(id)||{};const {id:_i,...p}=prev;
+      if(!v('se')||!v('agente'))throw erro('Escolha a subestação e o agente acessante.');
+      const cd=v('codigo');if(cd&&S.acessos.some(a=>a.id!==id&&nrm(a.codigo)===nrm(cd)))throw erro('Já existe acesso com este código.');
+      const dados={...p,codigo:cd,nome:v('nome'),status:v('status')||'andamento',se:v('se'),agente:v('agente'),inicio:v('inicio'),previsao:v('previsao'),descricao:v('descricao'),
+        chaves:v('chaves').split(/[;\n]+/).map(x=>x.trim()).filter(x=>x.length>=3),part:prev.part||{},criadoEm:prev.criadoEm||Date.now(),por:prev.por||S.me.id};
+      await S.db.doc('acessos/'+id).set(dados);
+      backSheet();toast(f.dataset.id?'Acesso salvo':'Acesso criado. Agora indique os participantes.');if(!f.dataset.id)acPart(id);
+    }
+  }catch(x){if(er)er.textContent=errMsg(x);else toast(errMsg(x))}finally{if(bt&&bt.isConnected)bt.disabled=false}
+});
+
+/* ================= dados: Supabase (registros e login) e Google Drive (arquivos) — base: camada do SGC rev. 8 =================
+   Tudo do SIGA tem nome próprio (siga.*, banco local "siga", funções siga_*) para conviver com o SGC no mesmo endereço do GitHub. */
+const CFG=Object.assign({supabaseUrl:'',supabaseAnonKey:'',driveUrl:''},window.APP_CONFIG||{});
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+function deepMerge(a,b){const o={...(a||{})};for(const k in b){const v=b[k];if(v&&typeof v==='object'&&!Array.isArray(v)&&o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))o[k]=deepMerge(o[k],v);else o[k]=v}return o}
+const erro=(msg,code,status)=>{const x=new Error(msg);x.code=code||'server';if(status)x.status=status;return x};
+
+/* ---- banco local do aparelho (cache, fila de envio e fotos ainda não enviadas) ---- */
+const LDB={p:null,
+  open(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('siga',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('kv',{keyPath:'k'});d.createObjectStore('fila',{keyPath:'n',autoIncrement:true});d.createObjectStore('arq',{keyPath:'id'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  async run(st,mode,fn){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(st,mode),s=t.objectStore(st);let out;const q=fn(s);if(q)q.onsuccess=()=>{out=q.result};t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
+  get(st,k){return this.run(st,'readonly',s=>s.get(k))},put(st,o){return this.run(st,'readwrite',s=>s.put(o))},add(st,o){return this.run(st,'readwrite',s=>s.add(o))},
+  del(st,k){return this.run(st,'readwrite',s=>s.delete(k))},all(st){return this.run(st,'readonly',s=>s.getAll())},clear(st){return this.run(st,'readwrite',s=>s.clear())}};
+
+/* ---- Supabase (REST, sem biblioteca externa) ---- */
+function traduz(m){m=String(m||'');
+  if(/invalid|expired/i.test(m)&&/token|otp/i.test(m))return 'Código inválido ou vencido. Peça outro.';
+  if(/anonymous sign-?ins are disabled/i.test(m))return 'Entrada por código desligada no Supabase: ligue "Anonymous sign-ins" em Authentication.';
+  if(/only request this after/i.test(m))return 'Aguarde alguns segundos antes de pedir outro código.';
+  if(/rate limit/i.test(m))return 'Limite de e-mails atingido. Tente mais tarde ou configure o envio de e-mail no Supabase.';
+  if(/signups not allowed/i.test(m))return 'Cadastro por e-mail desligado no Supabase (Authentication → Email).';
+  if(/JWT expired/i.test(m))return 'Sessão expirada. Abra o app de novo.';
+  return m}
+const SB={sess:null,
+  load(){try{this.sess=JSON.parse(localStorage.getItem('siga.sb')||'null')}catch(e){this.sess=null}},
+  save(s){this.sess=s;try{s?localStorage.setItem('siga.sb',JSON.stringify(s)):localStorage.removeItem('siga.sb')}catch(e){}},
+  base(){return String(CFG.supabaseUrl||'').replace(/\/+$/,'')},
+  async http(path,o){o=o||{};const h={apikey:CFG.supabaseAnonKey,'Content-Type':'application/json'};
+    if(o.auth!==false){await this.fresh();if(this.sess)h.Authorization='Bearer '+this.sess.access_token}
+    let r;try{r=await fetch(this.base()+path,{method:o.method||'GET',headers:h,body:o.body!=null?JSON.stringify(o.body):undefined})}catch(e){throw erro('Sem conexão com a internet.','offline')}
+    const txt=await r.text();let js=null;try{js=txt?JSON.parse(txt):null}catch(e){}
+    if(!r.ok){const m=(js&&(js.message||js.msg||js.error_description||js.error))||('Erro '+r.status);throw erro(traduz(m),r.status===401||(js&&js.code==='PGRST301')?'auth':'server',r.status)}
+    return js},
+  setSess(js){if(!js||!js.access_token)throw erro('Login não concluído.');this.save({access_token:js.access_token,refresh_token:js.refresh_token,expires_at:Date.now()+((js.expires_in||3600)-90)*1000,anon:!!(js.user&&js.user.is_anonymous),email:(js.user&&js.user.email)||''})},
+  async fresh(){if(!this.sess||Date.now()<this.sess.expires_at)return;if(this._r)return this._r;
+    this._r=(async()=>{try{const js=await this.http('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:{refresh_token:this.sess.refresh_token}});this.setSess(js)}
+      catch(e){if(e.code!=='offline')this.save(null);throw e}finally{this._r=null}})();return this._r},
+  async anon(){if(this.sess)return;this.setSess(await this.http('/auth/v1/signup',{method:'POST',auth:false,body:{data:{}}}))},
+  async otp(email){const volta=location.href.split('#')[0].split('?')[0];await this.http('/auth/v1/otp?redirect_to='+encodeURIComponent(volta),{method:'POST',auth:false,body:{email,create_user:true}})},
+  async verify(email,token){this.setSess(await this.http('/auth/v1/verify',{method:'POST',auth:false,body:{type:'email',email,token}}))},
+  rpc(fn,args,anonimo){return this.http('/rest/v1/rpc/'+fn,{method:'POST',body:args||{},auth:!anonimo})},
+  async logout(){try{await this.rpc('siga_sair')}catch(e){}try{await this.http('/auth/v1/logout',{method:'POST'})}catch(e){}this.save(null)}};
+
+/* ---- Google Drive (fotos e PDFs) ---- */
+async function drive(op,extra){
+  if(!CFG.driveUrl)throw erro('O endereço do script do Drive não foi configurado (config.js).');
+  await SB.fresh();if(!SB.sess)throw erro('Entre no app primeiro.','auth');
+  let r;try{r=await fetch(CFG.driveUrl,{method:'POST',body:JSON.stringify({op,token:SB.sess.access_token,...extra})})}catch(e){throw erro('Sem conexão com a internet.','offline')}
+  let js=null;try{js=await r.json()}catch(e){throw erro('Resposta inválida do script do Drive. Confira a implantação.','server')}
+  if(!js.ok)throw erro(js.erro||'Falha no Drive.','server');return js.r}
+const blobToB64=b=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]||'');fr.onerror=rej;fr.readAsDataURL(b)});
+const b64ToBlob=(b64,type)=>{const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type})};
+
+/* fotos tiradas sem sinal: ficam no aparelho com id provisório (tmp-) até subir */
+const MAPA={}, ARQURL={};
+function imgURL(id){id=String(id||'');if(id.startsWith('tmp-')){if(MAPA[id])id=MAPA[id];else return ARQURL[id]||''}return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1600'}
+const trocarTmp=s=>s.replace(/tmp-[a-z0-9]{6,}/g,t=>MAPA[t]||t);
+const assetsShim={pastas:true,
+  async upload(blob,opts){const type=(opts&&opts.type)||blob.type||'image/jpeg',name=blob.name||('arquivo.'+(type==='application/pdf'?'pdf':'jpg')),pasta=(opts&&opts.pasta)||null;
+    if(navigator.onLine&&SYNC.fila===0){try{const r=await drive('upload',{b64:await blobToB64(blob),mime:type,name,pasta});return {id:r.id,url:imgURL(r.id),sizeBytes:r.size,contentType:type}}
+      catch(e){if(/maior que|Envie foto/i.test(e.message||''))throw e;SYNC.ultimoErro=e.message}}
+    /* sem sinal ou falha no Drive: a foto fica no aparelho e sobe depois, sem perder o registro */
+    const id='tmp-'+genId().toLowerCase().replace(/[^a-z0-9]/g,'');await LDB.put('arq',{id,blob,type,name,pasta});ARQURL[id]=URL.createObjectURL(blob);
+    await filaAdd({t:'arq',tmp:id});return {id,url:ARQURL[id],sizeBytes:blob.size,contentType:type}},
+  async delete(id){id=String(id||'');if(id.startsWith('tmp-')&&!MAPA[id]){await LDB.del('arq',id);return {deleted:true}}try{await drive('delete',{id:MAPA[id]||id})}catch(e){}return {deleted:true}}};
+const API={async call(fn,id,forcar){
+  if(fn==='api_uso'){const [d,b]=await Promise.all([drive('uso',{forcar:!!forcar}),SB.rpc('siga_uso_banco').catch(()=>null)]);return {...d,banco:b&&b.banco,bancoLimite:CFG.bancoLimite||500*1024*1024,docs:b&&b.docs}}
+  if(fn!=='api_file')throw erro('Função indisponível.');id=String(id||'');
+  if(id.startsWith('tmp-')&&!MAPA[id]){const a=await LDB.get('arq',id);if(!a)throw erro('Foto não encontrada no aparelho.');return {mime:a.type,b64:await blobToB64(a.blob),name:a.name}}
+  return drive('get',{id:MAPA[id]||id})}};
+const dlShim={async save({filename,data}){
+  const type=/\.csv$/i.test(filename)?'text/csv;charset=utf-8':/\.html?$/i.test(filename)?'text/html;charset=utf-8':(data&&data.type)||'application/octet-stream';
+  const blob=data instanceof Blob?data:new Blob([data],{type});
+  if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&navigator.canShare){try{const f=new File([blob],filename,{type:blob.type});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],title:filename});return {status:'saved'}}}catch(e){if(e&&e.name==='AbortError')return {status:'declined'}}}
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),8000);return {status:'saved'}}};
+
+/* ---- registros: cópia local + fila de envio ---- */
+const Store={data:{},v:'',loaded:false,subs:[],dsubs:[],
+  coll(c){return this.data[c]||(this.data[c]={})},
+  snap(c){const docs=Object.entries(this.coll(c)).map(([id,o])=>({id,exists:true,data:()=>o}));return {docs,size:docs.length,empty:!docs.length}},
+  dsnap(c,id){const o=this.coll(c)[id];return {id,exists:!!o,data:()=>o}},
+  emit(){if(!this.loaded)return;for(const s of this.subs)s.cb(this.snap(s.c));for(const d of this.dsubs)d.cb(this.dsnap(d.c,d.id))}};
+const SYNC={since:'',fila:0,busy:null,esperando:new Map(),erroAuth:false};
+async function cacheSalvar(){try{await LDB.put('kv',{k:'docs',data:Store.data,since:SYNC.since,me:S.me&&S.me.id})}catch(e){}}
+async function cacheLer(){try{const r=await LDB.get('kv','docs');if(r&&(!S.me||r.me===S.me.id)){Store.data=r.data||{};SYNC.since=r.since||''}}catch(e){}}
+async function filaAdd(item){const n=await LDB.add('fila',{...item,em:Date.now()});SYNC.fila++;syncChip();return n}
+function processarFila(){
+  if(SYNC.busy)return SYNC.busy;
+  SYNC.busy=(async()=>{let recusou=false;
+    try{const itens=await LDB.all('fila');SYNC.fila=itens.length;
+      for(const it of itens){
+        if(!navigator.onLine)break;
+        try{
+          if(it.t==='arq'){const a=await LDB.get('arq',it.tmp);
+            if(a){const r=await drive('upload',{b64:await blobToB64(a.blob),mime:a.type,name:a.name,pasta:a.pasta||null});MAPA[it.tmp]=r.id;await LDB.put('kv',{k:'mapa',m:MAPA});await LDB.del('arq',it.tmp)}}
+          else if(it.t==='ops'){await SB.rpc('siga_doc_write',{p_ops:JSON.parse(trocarTmp(JSON.stringify(it.ops)))})}
+          await LDB.del('fila',it.n);SYNC.fila--;const w=SYNC.esperando.get(it.n);if(w){SYNC.esperando.delete(it.n);w.res()}
+        }catch(e){
+          if(e.code==='offline'||(e.status&&e.status>=500))break;
+          if(it.t==='arq'){SYNC.ultimoErro=e.message;if(!SYNC.avisouDrive){SYNC.avisouDrive=true;toast('As fotos não estão subindo para o Drive ('+e.message+'). Os registros ficam guardados no aparelho e sobem sozinhos quando o Drive responder.')}break}  /* foto nunca é descartada */
+          if(e.code==='auth'){SYNC.erroAuth=true;break}
+          await LDB.del('fila',it.n);SYNC.fila--;recusou=true;const w=SYNC.esperando.get(it.n);if(w){SYNC.esperando.delete(it.n);w.rej(e)}else toast('Não foi gravado: '+errMsg(e));
+        }
+      }
+      if(SYNC.fila===0)SYNC.ultimoErro='';
+    }finally{SYNC.busy=null;for(const [n,w] of SYNC.esperando){SYNC.esperando.delete(n);w.res()}syncChip()}
+    if(recusou){SYNC.since='';await puxar(true).catch(()=>{});Store.emit()}
+  })();
+  return SYNC.busy}
+async function puxar(full){
+  const since=full?'':SYNC.since,lim=1000;let mx=since,off=0;const dados=full?{}:Store.data;
+  const desde=since?new Date(new Date(since).getTime()-5000).toISOString():'';
+  for(;;){const js=await SB.http(`/rest/v1/siga_docs?select=col,id,data,deleted,updated_at&order=updated_at.asc,col.asc,id.asc&limit=${lim}&offset=${off}${desde?'&updated_at=gte.'+encodeURIComponent(desde):''}`);
+    for(const r of js){const c=dados[r.col]||(dados[r.col]={});if(r.deleted||!r.data)delete c[r.id];else c[r.id]=r.data;if(!mx||r.updated_at>mx)mx=r.updated_at}
+    if(js.length<lim)break;off+=lim}
+  Store.data=dados;SYNC.since=mx;await cacheSalvar()}
+function mkDb(){
+  const write=async ops=>{
+    if(!S.me)throw erro('Entre no app para registrar.');
+    for(const o of ops){const c=Store.coll(o.col);if(o.op==='delete')delete c[o.id];else if(o.op==='set')c[o.id]=JSON.parse(JSON.stringify(o.data));else c[o.id]=deepMerge(c[o.id],o.data)}
+    Store.emit();cacheSalvar();
+    const n=await filaAdd({t:'ops',ops:JSON.parse(JSON.stringify(ops))});
+    if(!navigator.onLine)return;
+    const espera=new Promise((res,rej)=>SYNC.esperando.set(n,{res,rej}));processarFila();
+    await Promise.race([espera,new Promise(r=>setTimeout(r,12000))]);
+  };
+  const ref=(c,id)=>({id,path:c+'/'+id,
+    set:d=>write([{op:'set',col:c,id,data:d}]),update:d=>write([{op:'update',col:c,id,data:d}]),delete:()=>write([{op:'delete',col:c,id}]),
+    get:async()=>Store.dsnap(c,id),
+    onSnapshot(cb){const s={c,id,cb};Store.dsubs.push(s);if(Store.loaded)setTimeout(()=>cb(Store.dsnap(c,id)));return ()=>{Store.dsubs=Store.dsubs.filter(x=>x!==s)}}});
+  const coll=c=>({path:c,doc:id=>ref(c,id||genId()),orderBy(){return this},limit(){return this},where(){return this},
+    add:async d=>{const r=ref(c,genId());await r.set(d);return r},get:async()=>Store.snap(c),
+    onSnapshot(cb){const s={c,cb};Store.subs.push(s);if(Store.loaded)setTimeout(()=>cb(Store.snap(c)));return ()=>{Store.subs=Store.subs.filter(x=>x!==s)}}});
+  return {doc:p=>{const [c,i]=String(p).split('/');return ref(c,i)},collection:coll};
+}
+function syncChip(){const el=$('#syncChip');if(!el)return;const off=!navigator.onLine;
+  el.hidden=!(off||SYNC.fila>0);el.textContent=off?(SYNC.fila?`Sem sinal · ${SYNC.fila} a enviar`:'Sem sinal'):(SYNC.ultimoErro&&!SYNC.busy?`${SYNC.fila} aguardando envio`:`Enviando ${SYNC.fila}…`);
+  el.title=SYNC.ultimoErro?('Último erro: '+SYNC.ultimoErro):''}
+let refreshing=null;
+function refresh(full){
+  if(refreshing)return refreshing;
+  refreshing=(async()=>{try{
+    if(!CFG.supabaseUrl||!CFG.supabaseAnonKey){S.needConfig=true;Store.loaded=true;Store.emit();return}
+    if(!SB.sess){S.me=null;Store.data={};Store.loaded=true;
+      try{const e=await SB.rpc('siga_estado',{},true);S.needSetup=!e.tem_usuarios}catch(e){}Store.emit();return}
+    if(S.vincularEmail){S.vincularEmail=false;try{await SB.rpc('siga_vincular_email')}catch(e){toast(errMsg(e));await SB.logout();return refreshDepois()}}
+    let me=null;
+    try{me=await SB.rpc('siga_eu');LS.set('siga.me',JSON.stringify(me||null))}
+    catch(e){if(e.code==='offline')me=JSON.parse(LS.get('siga.me')||'null');else if(e.code==='auth'){SB.save(null);return refreshDepois()}else throw e}
+    const antes=S.me&&S.me.id;
+    S.me=me&&me.id?{id:me.id,name:me.nome,tipo:me.tipo,isOwner:me.tipo==='admin',canEdit:me.tipo==='admin'}:null;
+    if(me&&me.acv&&me.acv!==LS.get('siga.acv')){full=true;S.acvNovo=me.acv}
+    if(!S.me){Store.data={};Store.loaded=true;try{const e=await SB.rpc('siga_estado',{},true);S.needSetup=!e.tem_usuarios}catch(e){}Store.emit();return}
+    if(!Store.loaded||antes!==S.me.id){await cacheLer();Store.loaded=true;Store.emit()}
+    if(navigator.onLine){await processarFila();if(SYNC.fila===0){try{await puxar(full||!SYNC.since);if(S.acvNovo){LS.set('siga.acv',S.acvNovo);S.acvNovo=null}Store.emit()}catch(e){if(e.code!=='offline')throw e}}}
+  }catch(e){toast(errMsg(e))}finally{refreshing=null;S.boot=false;syncChip();onData()}})();
+  return refreshing;
+}
+/* e-mail com link (modelo padrão do Supabase): o link volta para o app com o login no endereço */
+function lerLinkEmail(){const h=location.hash||'';if(!/(access_token|error_description)=/.test(h))return;
+  const p=new URLSearchParams(h.slice(1));try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  if(p.get('error_description')){setTimeout(()=>toast('O link do e-mail venceu ou já foi usado. Peça outro código.'),300);return}
+  SB.save({access_token:p.get('access_token'),refresh_token:p.get('refresh_token'),expires_at:Date.now()+((+p.get('expires_in')||3600)-90)*1000,anon:false,email:''});S.vincularEmail=true}
+function refreshDepois(){setTimeout(()=>refresh(true),50)}
+async function poll(){if(document.hidden)return;refresh()}
+S.lg={modo:'cel',etapa:1,email:''};
+async function doLogin(f){
+  const er=f.querySelector('.ferr');er.textContent='';const bt=f.querySelector('button[type=submit]');if(bt)bt.disabled=true;
+  try{
+    if(S.lg.modo==='cel'){
+      const c=String($('#lgCod')?.value||'').trim().toUpperCase();if(!c){er.textContent='Digite o código de acesso.';return}
+      await SB.anon();const r=await SB.rpc('siga_ativar',{p_codigo:c});if(r&&r.erro){er.textContent=r.erro;return}
+    }else if(S.lg.etapa===1){
+      const m=String($('#lgMail')?.value||'').trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(m)){er.textContent='Digite um e-mail válido.';return}
+      await SB.otp(m);S.lg.email=m;S.lg.etapa=2;renderView();toast('Enviamos um código para '+m);setTimeout(()=>$('#lgOtp')?.focus(),60);return;
+    }else{
+      const t=String($('#lgOtp')?.value||'').replace(/\D/g,'');if(t.length<6){er.textContent='Digite o código de 6 dígitos do e-mail.';return}
+      await SB.verify(S.lg.email,t);
+      try{await SB.rpc('siga_vincular_email')}catch(e){await SB.logout();throw e}
+    }
+    S.showLogin=false;S.lg.etapa=1;await refresh(true);toast('Bem-vindo'+(S.me?.name?', '+S.me.name:''));
+  }catch(e){er.textContent=errMsg(e)}finally{if(bt&&bt.isConnected)bt.disabled=false}
+}
+async function doSetup(f){
+  const fd=new FormData(f),nome=String(fd.get('nome')||'').trim(),c=String(fd.get('codigo')||'').trim().toUpperCase(),c2=String(fd.get('codigo2')||'').trim().toUpperCase(),er=f.querySelector('.ferr');er.textContent='';
+  if(!nome){er.textContent='Informe seu nome.';return}
+  if(c.length<6){er.textContent='O código precisa ter ao menos 6 caracteres.';return}
+  if(c!==c2){er.textContent='Os códigos não conferem.';return}
+  try{await SB.anon();await SB.rpc('siga_setup_admin',{p_nome:nome,p_codigo:c});await refresh(true);toast('Administrador criado. Agora cadastre subestação, agente e projeto de acesso.')}catch(e){er.textContent=errMsg(e)}
+}
+async function logout(){
+  if(SYNC.fila>0){toast(`Há ${SYNC.fila} alteração(ões) ainda não enviada(s). Conecte à internet antes de sair.`);return}
+  await SB.logout();LS.del('siga.me');LS.del('siga.acv');S.me=null;Store.data={};SYNC.since='';try{await LDB.clear('kv')}catch(e){}closeSheet();refresh();toast('Você saiu deste aparelho')}
+function envioHTML(u,c){
+  const url=location.href.split('#')[0].split('?')[0];
+  const cont=String(c.contato||''),cod=c.codigo||'';
+  if(/@/.test(cont))return `<a class="btn sm" target="_blank" rel="noopener" href="mailto:${esc(cont)}?subject=${encodeURIComponent('Acesso ao SIGA')}&body=${encodeURIComponent(`Olá, ${u.nome}! Abra ${url} , escolha "E-mail" e entre com ${cont}. Você vai receber um código no e-mail. Se preferir, use o código de acesso ${cod}.`)}">E-mail</a>`;
+  const dg=cont.replace(/\D/g,'');if(dg.length<10)return '';
+  return `<a class="btn sm" target="_blank" rel="noopener" href="https://wa.me/${dg.length<=11?'55'+dg:dg}?text=${encodeURIComponent(`Olá, ${u.nome}! Seu acesso ao SIGA (Gestão de Acessantes): ${url} — escolha "Celular" e digite o código ${cod}. Dá para instalar no celular pelo menu do navegador.`)}">WhatsApp</a>`;
+}
+/* instalar no celular */
+let INST=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INST=e;const b=$('#instBtn');if(b)b.hidden=false});
+window.addEventListener('appinstalled',()=>{const b=$('#instBtn');if(b)b.hidden=true;toast('App instalado. Abra pelo ícone na tela inicial.')});
+function instalacao(){
+  const ua=navigator.userAgent,inst=matchMedia('(display-mode: standalone)').matches||navigator.standalone;if(inst)return;
+  const b=$('#instBtn');if(b)b.onclick=()=>{if(INST){INST.prompt();INST=null;b.hidden=true}else ajudaInstalar()};
+  if(/iPhone|iPad|iPod/.test(ua)||/(FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\))/.test(ua)){if(b)b.hidden=false}
+}
+function ajudaInstalar(){const ua=navigator.userAgent;
+  pushSheet({title:'Instalar o app',render:()=>`<p class="desc">${/(FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\))/.test(ua)?'<b>Você abriu o link dentro de outro app (WhatsApp, por exemplo).</b> Toque nos três pontinhos e escolha <b>Abrir no navegador</b> (Chrome ou Safari) e instale de lá.':''}</p>
+    <div class="box"><h4>Android (Chrome)</h4><p class="desc">Toque em ⋮ (canto superior direito) → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b> → Instalar.</p></div>
+    <div class="box"><h4>iPhone (Safari)</h4><p class="desc">Toque em <b>Compartilhar</b> (quadrado com seta) → <b>Adicionar à Tela de Início</b> → Adicionar. Precisa ser pelo Safari.</p></div>
+    <p class="hint">Depois de instalado, abra sempre pelo ícone na tela inicial.</p>`})}
+function init(){
+  renderNav();renderView();
+  SB.load();lerLinkEmail();S.db=mkDb();S.assets=assetsShim;S.dl=dlShim;S.user=null;S.code='app';
+  LDB.get('kv','mapa').then(r=>{if(r&&r.m)Object.assign(MAPA,r.m)}).catch(()=>{});
+  LDB.all('arq').then(as=>{as.forEach(a=>{ARQURL[a.id]=URL.createObjectURL(a.blob)});if(as.length)onData()}).catch(()=>{});
+  LDB.all('fila').then(f=>{SYNC.fila=f.length;syncChip()}).catch(()=>{});
+  sub('subestacoes','ses',(a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  sub('agentes','agentes',(a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+  sub('acessos','acessos',(a,b)=>String(a.codigo||a.nome).localeCompare(String(b.codigo||b.nome),'pt-BR',{numeric:true}));
+  sub('usuarios','users',(a,b)=>(a.tipo==='admin'?-1:b.tipo==='admin'?1:String(a.nome).localeCompare(String(b.nome),'pt-BR')));
+  S.db.collection('contatos').onSnapshot(snap=>{S.contatos=Object.fromEntries(snap.docs.map(d=>[d.id,d.data()]));onData()});
+  S.db.doc('config/app').onSnapshot(d=>{S.cfgApp=d.exists?d.data():null;onData()});
+  refresh();
+  setInterval(poll,25000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  window.addEventListener('online',()=>{syncChip();refresh()});window.addEventListener('offline',syncChip);
+  if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+  instalacao();
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+}
+init();
+
+</script>
+</body></html>

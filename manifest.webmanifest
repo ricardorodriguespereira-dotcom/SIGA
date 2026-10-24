@@ -1,0 +1,29 @@
+{
+ "name": "SIGA — Sistema de Gestão de Acessantes",
+ "short_name": "SIGA",
+ "description": "Gestão de acessantes das subestações: projetos de acesso, documentos de projeto, PEX, SI/SIAE, SPCS, supervisão, reuniões e e-mails.",
+ "lang": "pt-BR",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#E9EDEB",
+ "theme_color": "#173A34",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
